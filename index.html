@@ -277,7 +277,7 @@ function renderDashboard(){
   if(tl.length){tl.forEach(function(t){html+='<div class="tl-row"><div class="tl-dot tl-'+t.status+'"></div><div class="tl-lbl">'+t.label+'</div><div class="tl-date">'+(t.date||'')+'</div><span class="tl-badge '+(t.status==='done'?'tb-done':t.status==='current'?'tb-current':'tb-upcoming')+'">'+(t.status==='done'?'Done':t.status==='current'?'In progress':t.date||'Upcoming')+'</span></div>';});}
   else html+='<div class="empty">Timeline will appear here — your account manager is setting it up.</div>';
   html+='</div>';
-  if(acts.length){html+='<div class="card"><div class="card-title">Your action items</div><div class="action-list">';acts.forEach(function(a){html+='<div class="action-row"><div class="abox'+(a.done?' done')+'">'+(a.done?'&#10003;':'')+'</div><span>'+a.label+'</span></div>';});html+='</div></div>';}
+  if(acts.length){html+='<div class="card"><div class="card-title">Your action items</div><div class="action-list">';acts.forEach(function(a){html+='<div class="action-row"><div class="abox'+(a.done?' done':'')+'">'+(a.done?'&#10003;':'')+'</div><span>'+a.label+'</span></div>';});html+='</div></div>';}
   return html;
 }
 function renderNotes(){
