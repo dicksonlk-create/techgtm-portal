@@ -452,15 +452,12 @@ async function createWorkspace(){
   var btn=document.getElementById('create-btn');
   btn.textContent='Creating...';btn.disabled=true;
   try{
-    var ar=await sb.auth.signUp({email:em,password:pw});
-    if(ar.error)throw ar.error;
-    var uid=ar.data.user.id;
+    var kSess=(await sb.auth.getSession()).data.session;
+    var sdate=new Date(sd).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    var ldate=new Date(ld).toLocaleDateString('en-US',{month:'short',day:'numeric'});
     var cr=await sb.from('clients').insert({name:na||co,company_name:co,status:'build',start_date:sd,launch_date:ld}).select().single();
     if(cr.error)throw cr.error;
     var cid=cr.data.id;
-    await sb.from('profiles').upsert({id:uid,is_admin:false,client_id:cid},{onConflict:'id'});
-    var sdate=new Date(sd).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    var ldate=new Date(ld).toLocaleDateString('en-US',{month:'short',day:'numeric'});
     var sections=[
       {client_id:cid,section:'kpis',data:{domains:'—',domains_sub:'Being purchased',inboxes:'—',inboxes_sub:'',emails_sent:'—',emails_sub:'Starts at launch',leads:'—',leads_sub:'Week 2-3 post-launch',demos:'—',demos_sub:'Week 3-5 post-launch'}},
       {client_id:cid,section:'timeline',data:{items:[
@@ -497,22 +494,19 @@ async function createWorkspace(){
       {client_id:cid,section:'domains',data:{items:[],files:[]}},
       {client_id:cid,section:'icp',data:{profile:[],negative:[],quotes:[]}}
     ];
-    await sb.from('client_data').insert(sections);
-    // NOW create the user — this changes the active session
+    var dr=await sb.from('client_data').insert(sections);
+    if(dr.error)throw dr.error;
     var ar=await sb.auth.signUp({email:em,password:pw});
     if(ar.error)throw ar.error;
     var uid=ar.data.user.id;
-    // Link profile — new user can update their own profile row
     await sb.from('profiles').upsert({id:uid,is_admin:false,client_id:cid},{onConflict:'id'});
-    // Restore Kyle's admin session
     if(kSess)await sb.auth.setSession({access_token:kSess.access_token,refresh_token:kSess.refresh_token});
     document.getElementById('setup-form').style.display='none';
-    var suc=document.getElementById('fsuc');
-    document.getElementById('fsuc-details').innerHTML='<strong>'+co+'</strong> workspace is live.<br>Email: '+em+'<br>Password: '+pw+'<br><br>Copy these credentials and send them to your client. They can log in at this portal URL right now.';
-    suc.style.display='block';
+    document.getElementById('fsuc-details').innerHTML='<strong>'+co+'</strong> workspace is live.<br>Email: '+em+'<br>Password: '+pw+'<br><br>Copy these and send to your client. They can log in now.';
+    document.getElementById('fsuc').style.display='block';
     renderAdmin();
   }catch(e){
-    ferr.textContent='Error: '+(e.message||'Something went wrong. Make sure email confirmation is disabled in Supabase.');
+    ferr.textContent='Error: '+(e.message||'Something went wrong.');
     ferr.style.display='block';
   }
   btn.textContent='Create Workspace';btn.disabled=false;
