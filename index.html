@@ -7,20 +7,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --navy:#1F3864;--blue:#2E75B6;--text:#111827;--muted:#6b7280;
-  --light:#9ca3af;--border:#e5e7eb;--bg:#f9fafb;--white:#ffffff;
-  --green:#16a34a;--green-bg:#f0fdf4;--warn:#b45309;--warn-bg:#fffbeb;
-  --info:#1d4ed8;--info-bg:#eff6ff;--red:#dc2626;--red-bg:#fef2f2;
-}
+:root{--navy:#1F3864;--blue:#2E75B6;--text:#111827;--muted:#6b7280;--light:#9ca3af;--border:#e5e7eb;--bg:#f9fafb;--white:#ffffff;--green:#16a34a;--green-bg:#f0fdf4;--warn:#b45309;--warn-bg:#fffbeb;--info:#1d4ed8;--info-bg:#eff6ff;--red:#dc2626;--red-bg:#fef2f2}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;background:var(--white);color:var(--text);font-size:14px}
-a{color:var(--info);text-decoration:none}
-a:hover{text-decoration:underline}
+a{color:var(--info);text-decoration:none}a:hover{text-decoration:underline}
 #loading{display:flex;align-items:center;justify-content:center;height:100vh;color:var(--muted)}
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f0f4f8;display:none}
-.login-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:44px 40px;width:400px;max-width:92vw;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.login-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;background:#f0f4f8}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:44px 40px;width:400px;max-width:92vw}
 .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:32px}
 .brand-mark{width:40px;height:40px;background:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff;flex-shrink:0}
 .brand-name{font-size:14px;font-weight:600;color:var(--navy);line-height:1.2}
@@ -29,146 +23,103 @@ a:hover{text-decoration:underline}
 .login-sh{font-size:13px;color:var(--muted);margin-bottom:28px}
 .field{margin-bottom:18px}
 .field label{display:block;font-size:13px;font-weight:500;margin-bottom:6px}
-.field input{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:border .15s;color:var(--text);background:var(--white)}
-.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.08)}
-.login-btn{width:100%;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;margin-top:4px;transition:background .15s}
+.field input{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;color:var(--text);background:var(--white)}
+.field input:focus{border-color:var(--blue)}
+.login-btn{width:100%;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;margin-top:4px}
 .login-btn:hover{background:#162d55}
 .login-btn:disabled{opacity:.6;cursor:default}
 .login-err{background:var(--red-bg);border:1px solid #fecaca;border-radius:7px;padding:10px 13px;font-size:13px;color:var(--red);margin-bottom:16px;display:none}
-.portal{display:flex;height:100vh;overflow:hidden;display:none}
-.sidebar{width:230px;min-width:230px;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.portal{display:none;height:100vh;overflow:hidden}
+.sidebar{width:230px;min-width:230px;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;position:fixed;top:0;left:0;height:100vh}
 .sb-head{padding:18px 14px 14px;border-bottom:1px solid var(--border)}
 .sb-workspace{font-size:11px;color:var(--light);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
 .sb-client{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.3}
 .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
-.pill-build{background:var(--info-bg);color:var(--info)}
-.pill-warming{background:var(--warn-bg);color:var(--warn)}
-.pill-live{background:var(--green-bg);color:var(--green)}
-.pill-paused{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.pill-build{background:var(--info-bg);color:var(--info)}.pill-warming{background:var(--warn-bg);color:var(--warn)}.pill-live{background:var(--green-bg);color:var(--green)}.pill-paused{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
 .sdot{width:5px;height:5px;border-radius:50%;background:currentColor}
 .nav-label{padding:12px 14px 3px;font-size:10px;font-weight:600;letter-spacing:.07em;color:var(--light);text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:7px;cursor:pointer;margin:2px 6px;font-size:13px;color:var(--muted);transition:all .1s}
-.nav-item:hover{background:#ebedf0;color:var(--text)}
-.nav-item.active{background:#dbeafe;color:var(--info);font-weight:500}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:7px;cursor:pointer;margin:2px 6px;font-size:13px;color:var(--muted)}
+.nav-item:hover{background:#ebedf0;color:var(--text)}.nav-item.active{background:#dbeafe;color:var(--info);font-weight:500}
 .nav-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0}
 .sb-foot{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
-.sf-user{font-size:13px;font-weight:500}
-.sf-role{font-size:11px;color:var(--muted);margin-top:1px}
+.sf-user{font-size:13px;font-weight:500}.sf-role{font-size:11px;color:var(--muted);margin-top:1px}
 .sf-signout{font-size:11px;color:var(--red);cursor:pointer;margin-top:6px;display:inline-block}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.main{margin-left:230px;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .topbar{padding:13px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--white)}
-.tb-title{font-size:16px;font-weight:600}
-.tb-meta{font-size:12px;color:var(--muted);margin-top:1px}
+.tb-title{font-size:16px;font-weight:600}.tb-meta{font-size:12px;color:var(--muted);margin-top:1px}
 .content{flex:1;overflow-y:auto;padding:22px;background:var(--white)}
 .card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:14px}
 .card-title{font-size:13px;font-weight:600;margin-bottom:12px}
 .empty{font-size:13px;color:var(--light);padding:6px 0}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .kpi{background:var(--bg);border-radius:9px;padding:13px 15px}
-.kpi-lbl{font-size:11px;color:var(--muted);margin-bottom:4px}
-.kpi-val{font-size:22px;font-weight:600;line-height:1}
-.kpi-sub{font-size:11px;color:var(--light);margin-top:3px}
+.kpi-lbl{font-size:11px;color:var(--muted);margin-bottom:4px}.kpi-val{font-size:22px;font-weight:600;line-height:1}.kpi-sub{font-size:11px;color:var(--light);margin-top:3px}
 .kpi-good .kpi-sub{color:var(--green)}
-.tl-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)}
-.tl-row:last-child{border:none}
-.tl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.tl-done{background:var(--green)}.tl-current{background:var(--info)}.tl-upcoming{background:#d1d5db}
-.tl-lbl{font-size:12px;flex:1;line-height:1.4}
-.tl-date{font-size:11px;color:var(--light);white-space:nowrap}
+.tl-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)}.tl-row:last-child{border:none}
+.tl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}.tl-done{background:var(--green)}.tl-current{background:var(--info)}.tl-upcoming{background:#d1d5db}
+.tl-lbl{font-size:12px;flex:1;line-height:1.4}.tl-date{font-size:11px;color:var(--light);white-space:nowrap}
 .tl-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;margin-left:6px;white-space:nowrap}
-.tb-done{background:var(--green-bg);color:var(--green)}
-.tb-current{background:var(--info-bg);color:var(--info)}
-.tb-upcoming{background:var(--bg);color:var(--muted)}
+.tb-done{background:var(--green-bg);color:var(--green)}.tb-current{background:var(--info-bg);color:var(--info)}.tb-upcoming{background:var(--bg);color:var(--muted)}
 .action-list{display:flex;flex-direction:column;gap:8px}
 .action-row{display:flex;align-items:center;gap:9px;font-size:13px}
 .abox{width:15px;height:15px;border:1.5px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--white)}
-.abox.done{background:var(--green);border-color:var(--green)}
-.abox.done+span{text-decoration:line-through;color:var(--light)}
+.abox.done{background:var(--green);border-color:var(--green)}.abox.done+span{text-decoration:line-through;color:var(--light)}
 .call-card{border:1px solid var(--border);border-radius:10px;margin-bottom:12px}
 .call-header{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--bg)}
 .call-ico{width:30px;height:30px;border-radius:7px;background:var(--info-bg);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.call-title-text{font-size:13px;font-weight:600}
-.call-meta-text{font-size:11px;color:var(--muted);margin-top:1px}
+.call-title-text{font-size:13px;font-weight:600}.call-meta-text{font-size:11px;color:var(--muted);margin-top:1px}
 .call-body{padding:14px 16px}
-.note-block{margin-bottom:10px;font-size:13px;line-height:1.65;color:#374151}
-.note-block:last-child{margin:0}
-.note-lbl{font-weight:600;color:var(--text)}
+.note-block{margin-bottom:10px;font-size:13px;line-height:1.65;color:#374151}.note-block:last-child{margin:0}.note-lbl{font-weight:600;color:var(--text)}
 .tier-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .tier-box{border:1px solid var(--border);border-radius:9px;padding:13px}
-.tier-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
-.tier-name{font-size:12px;font-weight:600}
+.tier-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}.tier-name{font-size:12px;font-weight:600}
 .seq-row{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);padding:3px 0}
 .ss{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:500;flex-shrink:0}
-.ss-approved{background:var(--green-bg);color:var(--green)}
-.ss-review{background:var(--warn-bg);color:var(--warn)}
-.ss-draft{background:var(--bg);color:var(--muted)}
-.ss-live{background:var(--info-bg);color:var(--info)}
+.ss-approved{background:var(--green-bg);color:var(--green)}.ss-review{background:var(--warn-bg);color:var(--warn)}.ss-draft{background:var(--bg);color:var(--muted)}.ss-live{background:var(--info-bg);color:var(--info)}
 .seg-box{border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:10px}
 .seg-head{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px}
-.seg-title-text{font-size:13px;font-weight:600;flex:1;line-height:1.4}
-.seg-desc{font-size:12px;color:#374151;line-height:1.65}
-.tool-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg)}
-.tool-row:last-child{border:none}
+.seg-title-text{font-size:13px;font-weight:600;flex:1;line-height:1.4}.seg-desc{font-size:12px;color:#374151;line-height:1.65}
+.tool-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg)}.tool-row:last-child{border:none}
 .tool-ico{width:32px;height:32px;border-radius:7px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.tool-name{font-size:13px;font-weight:500;flex:1}
-.tool-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.tool-name{font-size:13px;font-weight:500;flex:1}.tool-sub{font-size:11px;color:var(--muted);margin-top:1px}
 .tool-link{font-size:12px;font-weight:500;color:var(--info);white-space:nowrap}
-.domain-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg)}
-.domain-row:last-child{border:none}
-.d-name{font-size:13px;font-weight:500;flex:1}
-.d-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.domain-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg)}.domain-row:last-child{border:none}
+.d-name{font-size:13px;font-weight:500;flex:1}.d-sub{font-size:11px;color:var(--muted);margin-top:1px}
 .warmup-pct{font-size:11px;color:var(--green);margin-bottom:4px;text-align:right}
 .warmup-bar{height:4px;border-radius:2px;background:var(--border);width:90px}
-.warmup-fill{height:100%;border-radius:2px;background:var(--green);transition:width .3s}
+.warmup-fill{height:100%;border-radius:2px;background:var(--green)}
 .icp-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
 .icp-attr{background:var(--bg);border-radius:8px;padding:11px 13px}
 .icp-attr-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .icp-attr-val{font-size:13px;font-weight:500;line-height:1.4}
-.neg-row{display:flex;gap:9px;font-size:12px;color:#374151;padding:4px 0;line-height:1.5}
-.neg-lbl{font-weight:600;min-width:110px;flex-shrink:0;color:var(--text)}
+.neg-row{display:flex;gap:9px;font-size:12px;color:#374151;padding:4px 0;line-height:1.5}.neg-lbl{font-weight:600;min-width:110px;flex-shrink:0;color:var(--text)}
 .voc-q{border-left:3px solid #bfdbfe;padding:8px 12px;margin-bottom:8px;font-size:13px;font-style:italic;color:#374151;line-height:1.6}
 .alert{border-radius:8px;padding:11px 13px;font-size:13px;margin-bottom:14px;border-left:3px solid}
-.alert-info{background:var(--info-bg);border-color:var(--blue);color:#1e40af}
-.alert-warn{background:var(--warn-bg);border-color:var(--warn);color:#78350f}
+.alert-info{background:var(--info-bg);border-color:var(--blue);color:#1e40af}.alert-warn{background:var(--warn-bg);border-color:var(--warn);color:#78350f}
 .alert-title{font-weight:600;margin-bottom:2px}
 .admin-clients{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:20px}
-.admin-client-card{border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:border .15s}
+.admin-client-card{border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer}
 .admin-client-card:hover{border-color:var(--blue);background:#f8fbff}
-.acc-name{font-size:15px;font-weight:600;margin-bottom:4px}
-.acc-meta{font-size:12px;color:var(--muted)}
-.acc-status{margin-top:8px}
+.acc-name{font-size:15px;font-weight:600;margin-bottom:4px}.acc-meta{font-size:12px;color:var(--muted)}.acc-status{margin-top:8px}
 .admin-back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--info);cursor:pointer;margin-bottom:16px}
-.admin-back:hover{text-decoration:underline}
 </style>
 </head>
 <body>
- 
 <div id="loading"><div class="spinner"></div>Loading your portal...</div>
- 
 <div class="login-wrap" id="login-wrap">
   <div class="login-card">
     <div class="login-brand">
       <div class="brand-mark">T</div>
-      <div>
-        <div class="brand-name">TechGTM Systems</div>
-        <div class="brand-sub">Client Portal</div>
-      </div>
+      <div><div class="brand-name">TechGTM Systems</div><div class="brand-sub">Client Portal</div></div>
     </div>
     <h1 class="login-h">Sign in to your portal</h1>
     <p class="login-sh">Enter the credentials sent to you by Kyle</p>
     <div class="login-err" id="login-err"></div>
-    <div class="field">
-      <label>Email address</label>
-      <input type="email" id="inp-email" placeholder="you@company.com" autocomplete="email">
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
-    </div>
+    <div class="field"><label>Email address</label><input type="email" id="inp-email" placeholder="you@company.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="inp-pass" placeholder="Enter your password"></div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in</button>
   </div>
 </div>
- 
 <div class="portal" id="portal">
   <div class="sidebar">
     <div class="sb-head">
@@ -200,304 +151,206 @@ a:hover{text-decoration:underline}
   </div>
   <div class="main">
     <div class="topbar">
-      <div>
-        <div class="tb-title" id="tb-title">Dashboard</div>
-        <div class="tb-meta" id="tb-meta">—</div>
-      </div>
+      <div><div class="tb-title" id="tb-title">Dashboard</div><div class="tb-meta" id="tb-meta">—</div></div>
       <span class="status-pill" id="tb-pill"><span class="sdot"></span><span id="tb-pill-text">—</span></span>
     </div>
     <div class="content" id="content"></div>
   </div>
 </div>
- 
 <script>
-const SUPABASE_URL = 'https://gidimjerpzkodfhqgkkc.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpZGltamVycHprb2RmaHFna2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjQ0NzAsImV4cCI6MjA5MDY0MDQ3MH0.ons8w_az8qQlkme11trqGdgqKKB1XBI54uaiAZD_B4c';
- 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
- 
-let me=null,profile=null,client=null,data={},viewingClientId=null;
- 
-const SECTION_TITLES={
-  dashboard:'Dashboard',notes:'Call Notes',copy:'Copywriting',
-  segments:'Campaign Hypothesis',logins:'Login Sheet',
-  domains:'Domains & Data',icp:'CRM Mining & ICP',admin:'All Clients'
-};
- 
+var SURL = 'https://gidimjerpzkodfhqgkkc.supabase.co';
+var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpZGltamVycHprb2RmaHFna2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjQ0NzAsImV4cCI6MjA5MDY0MDQ3MH0.ons8w_az8qQlkme11trqGdgqKKB1XBI54uaiAZD_B4c';
+var sb;
+var me=null,profile=null,client=null,data={};
+var TITLES={dashboard:'Dashboard',notes:'Call Notes',copy:'Copywriting',segments:'Campaign Hypothesis',logins:'Login Sheet',domains:'Domains & Data',icp:'CRM Mining & ICP',admin:'All Clients'};
+window.addEventListener('load', function() {
+  sb = window.supabase.createClient(SURL, SKEY);
+  init();
+});
+function showErr(msg){var e=document.getElementById('login-err');e.textContent=msg;e.style.display='block';}
+function hide(id){document.getElementById(id).style.display='none';}
+function show(id,flex){document.getElementById(id).style.display=flex?'flex':'block';}
 async function doLogin(){
-  const email=document.getElementById('inp-email').value.trim();
-  const pass=document.getElementById('inp-pass').value;
-  const err=document.getElementById('login-err');
-  const btn=document.getElementById('login-btn');
-  err.style.display='none';
+  var email=document.getElementById('inp-email').value.trim();
+  var pass=document.getElementById('inp-pass').value;
+  var btn=document.getElementById('login-btn');
+  hide('login-err');
   if(!email||!pass){showErr('Please enter your email and password.');return;}
-  btn.textContent='Signing in…';btn.disabled=true;
-  const {data:d,error}=await sb.auth.signInWithPassword({email,password:pass});
+  btn.textContent='Signing in...';btn.disabled=true;
+  var res=await sb.auth.signInWithPassword({email:email,password:pass});
   btn.textContent='Sign in';btn.disabled=false;
-  if(error){showErr(error.message);return;}
-  await boot(d.user);
+  if(res.error){showErr(res.error.message);return;}
+  await boot(res.data.user);
 }
-function showErr(msg){const e=document.getElementById('login-err');e.textContent=msg;e.style.display='block';}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    var focused=document.activeElement;
+    if(focused&&focused.id==='inp-email'){document.getElementById('inp-pass').focus();}
+    else if(focused&&focused.id==='inp-pass'){doLogin();}
+  }
+});
 async function doLogout(){
   await sb.auth.signOut();
-  me=null;profile=null;client=null;data={};viewingClientId=null;
-  document.getElementById('portal').style.display='none';
-  document.getElementById('login-wrap').style.display='flex';
+  me=null;profile=null;client=null;data={};
+  hide('portal');show('login-wrap',true);
 }
-document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-document.getElementById('inp-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-pass').focus();});
- 
 async function init(){
-  const {data:{session}}=await sb.auth.getSession();
-  document.getElementById('loading').style.display='none';
-  if(session?.user) await boot(session.user);
-  else document.getElementById('login-wrap').style.display='flex';
+  var res=await sb.auth.getSession();
+  hide('loading');
+  if(res.data&&res.data.session&&res.data.session.user){
+    await boot(res.data.session.user);
+  } else {
+    show('login-wrap',true);
+  }
 }
- 
 async function boot(user){
   me=user;
-  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
-  if(!p){showErr('No account found. Contact kyle@techgtmsystems.com.');await sb.auth.signOut();document.getElementById('login-wrap').style.display='flex';return;}
-  profile=p;
-  if(p.is_admin){
+  var res=await sb.from('profiles').select('*').eq('id',user.id).single();
+  if(!res.data){showErr('No account found. Contact kyle@techgtmsystems.com.');await sb.auth.signOut();hide('loading');show('login-wrap',true);return;}
+  profile=res.data;
+  if(profile.is_admin){
     document.getElementById('admin-nav-wrap').style.display='block';
-    await loadAdmin();
+    client={company_name:'Admin View',status:'live'};
   } else {
-    await loadClient(p.client_id);
+    var cr=await sb.from('clients').select('*').eq('id',profile.client_id).single();
+    client=cr.data;
+    var dr=await sb.from('client_data').select('*').eq('client_id',profile.client_id);
+    data={};
+    if(dr.data){dr.data.forEach(function(r){data[r.section]=r.data;});}
   }
   renderChrome();
-  document.getElementById('login-wrap').style.display='none';
+  hide('login-wrap');
   document.getElementById('portal').style.display='flex';
-  nav(p.is_admin?'admin':'dashboard',document.getElementById(p.is_admin?'nav-admin':'nav-dashboard'));
+  nav(profile.is_admin?'admin':'dashboard',document.getElementById(profile.is_admin?'nav-admin':'nav-dashboard'));
 }
- 
-async function loadClient(clientId){
-  const {data:c}=await sb.from('clients').select('*').eq('id',clientId).single();
-  client=c;viewingClientId=clientId;
-  const {data:rows}=await sb.from('client_data').select('*').eq('client_id',clientId);
-  data={};
-  if(rows) rows.forEach(r=>data[r.section]=r.data);
-}
- 
-async function loadAdmin(){
-  client={company_name:'Admin View',status:'live'};
-  viewingClientId=null;
-}
- 
 function renderChrome(){
-  const n=client?.company_name||client?.name||'Client';
+  var n=(client&&(client.company_name||client.name))||'Client';
   document.getElementById('sb-name').textContent=n;
-  const status=client?.status||'build';
-  const labels={build:'Building',warming:'Warming',live:'Live',paused:'Paused'};
-  const classes={build:'pill-build',warming:'pill-warming',live:'pill-live',paused:'pill-paused'};
-  ['sb-pill','tb-pill'].forEach(id=>{const el=document.getElementById(id);el.className='status-pill '+(classes[status]||'pill-build');});
+  var status=(client&&client.status)||'build';
+  var labels={build:'Building',warming:'Warming',live:'Live',paused:'Paused'};
+  var classes={build:'pill-build',warming:'pill-warming',live:'pill-live',paused:'pill-paused'};
+  ['sb-pill','tb-pill'].forEach(function(id){document.getElementById(id).className='status-pill '+(classes[status]||'pill-build');});
   document.getElementById('sb-pill-text').textContent=labels[status]||status;
   document.getElementById('tb-pill-text').textContent=labels[status]||status;
-  const nameStr=me.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  var nameStr=me.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
   document.getElementById('sb-user').textContent=nameStr;
-  document.getElementById('sb-role').textContent=profile?.is_admin?'Account Manager':'Client';
-  const start=client?.start_date?new Date(client.start_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
-  const launch=client?.launch_date?new Date(client.launch_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
-  document.getElementById('tb-meta').textContent=`Started ${start} · Launch Day ${launch}`;
+  document.getElementById('sb-role').textContent=profile&&profile.is_admin?'Account Manager':'Client';
+  var start=client&&client.start_date?new Date(client.start_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+  var launch=client&&client.launch_date?new Date(client.launch_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+  document.getElementById('tb-meta').textContent='Started '+start+' · Launch '+launch;
 }
- 
 function nav(section,el){
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if(el) el.classList.add('active');
-  document.getElementById('tb-title').textContent=SECTION_TITLES[section]||section;
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  if(el)el.classList.add('active');
+  document.getElementById('tb-title').textContent=TITLES[section]||section;
   renderSection(section);
 }
- 
 function renderSection(id){
-  const el=document.getElementById('content');
-  if(id==='dashboard') el.innerHTML=renderDashboard();
-  else if(id==='notes') el.innerHTML=renderNotes();
-  else if(id==='copy') el.innerHTML=renderCopy();
-  else if(id==='segments') el.innerHTML=renderSegments();
-  else if(id==='logins') el.innerHTML=renderLogins();
-  else if(id==='domains') el.innerHTML=renderDomains();
-  else if(id==='icp') el.innerHTML=renderICP();
-  else if(id==='admin') renderAdminSection();
+  var el=document.getElementById('content');
+  if(id==='dashboard')el.innerHTML=renderDashboard();
+  else if(id==='notes')el.innerHTML=renderNotes();
+  else if(id==='copy')el.innerHTML=renderCopy();
+  else if(id==='segments')el.innerHTML=renderSegments();
+  else if(id==='logins')el.innerHTML=renderLogins();
+  else if(id==='domains')el.innerHTML=renderDomains();
+  else if(id==='icp')el.innerHTML=renderICP();
+  else if(id==='admin')renderAdmin();
 }
- 
 function renderDashboard(){
-  const kpis=data.kpis||{};
-  const tl=(data.timeline||{}).items||[];
-  const acts=(data.actions||{}).items||[];
-  const alrt=data.dashboard_alert||null;
-  const kpiItems=[
+  var kpis=data.kpis||{};
+  var tl=(data.timeline&&data.timeline.items)||[];
+  var acts=(data.actions&&data.actions.items)||[];
+  var alrt=data.dashboard_alert||null;
+  var cards=[
     {lbl:'Domains',val:kpis.domains||'—',sub:kpis.domains_sub||'',good:!!kpis.domains},
     {lbl:'Inboxes',val:kpis.inboxes||'—',sub:kpis.inboxes_sub||'',good:false},
     {lbl:'Days to Launch',val:kpis.days_to_launch||'—',sub:kpis.launch_sub||'',good:false},
     {lbl:'Emails Sent',val:kpis.emails_sent||'—',sub:kpis.emails_sub||'Starts at launch',good:false},
-    {lbl:'Leads Generated',val:kpis.leads||'—',sub:kpis.leads_sub||'Week 2–3 post-launch',good:false},
-    {lbl:'Demos Booked',val:kpis.demos||'—',sub:kpis.demos_sub||'Week 3–5 post-launch',good:false},
+    {lbl:'Leads Generated',val:kpis.leads||'—',sub:kpis.leads_sub||'Week 2-3 post-launch',good:false},
+    {lbl:'Demos Booked',val:kpis.demos||'—',sub:kpis.demos_sub||'Week 3-5 post-launch',good:false}
   ];
-  return `
-    <div class="kpi-grid">${kpiItems.map(k=>`
-      <div class="kpi${k.good?' kpi-good':''}">
-        <div class="kpi-lbl">${k.lbl}</div>
-        <div class="kpi-val">${k.val}</div>
-        <div class="kpi-sub">${k.sub}</div>
-      </div>`).join('')}</div>
-    ${alrt?`<div class="alert alert-${alrt.type||'info'}"><div class="alert-title">${alrt.title||''}</div>${alrt.body||''}</div>`:''}
-    <div class="card">
-      <div class="card-title">Onboarding timeline</div>
-      ${tl.length?tl.map(t=>`
-        <div class="tl-row">
-          <div class="tl-dot tl-${t.status}"></div>
-          <div class="tl-lbl">${t.label}</div>
-          <div class="tl-date">${t.date||''}</div>
-          <span class="tl-badge ${t.status==='done'?'tb-done':t.status==='current'?'tb-current':'tb-upcoming'}">${t.status==='done'?'Done':t.status==='current'?'In progress':t.date||'Upcoming'}</span>
-        </div>`).join(''):`<div class="empty">Timeline will appear here — your account manager is setting it up.</div>`}
-    </div>
-    ${acts.length?`<div class="card">
-      <div class="card-title">Your action items</div>
-      <div class="action-list">${acts.map(a=>`
-        <div class="action-row">
-          <div class="abox${a.done?' done'}">${a.done?'✓':''}</div>
-          <span>${a.label}</span>
-        </div>`).join('')}
-      </div>
-    </div>`:''}`;
+  var html='<div class="kpi-grid">';
+  cards.forEach(function(k){html+='<div class="kpi'+(k.good?' kpi-good':'')+'"><div class="kpi-lbl">'+k.lbl+'</div><div class="kpi-val">'+k.val+'</div><div class="kpi-sub">'+k.sub+'</div></div>';});
+  html+='</div>';
+  if(alrt)html+='<div class="alert alert-'+(alrt.type||'info')+'"><div class="alert-title">'+(alrt.title||'')+'</div>'+(alrt.body||'')+'</div>';
+  html+='<div class="card"><div class="card-title">Onboarding timeline</div>';
+  if(tl.length){tl.forEach(function(t){html+='<div class="tl-row"><div class="tl-dot tl-'+t.status+'"></div><div class="tl-lbl">'+t.label+'</div><div class="tl-date">'+(t.date||'')+'</div><span class="tl-badge '+(t.status==='done'?'tb-done':t.status==='current'?'tb-current':'tb-upcoming')+'">'+(t.status==='done'?'Done':t.status==='current'?'In progress':t.date||'Upcoming')+'</span></div>';});}
+  else html+='<div class="empty">Timeline will appear here — your account manager is setting it up.</div>';
+  html+='</div>';
+  if(acts.length){html+='<div class="card"><div class="card-title">Your action items</div><div class="action-list">';acts.forEach(function(a){html+='<div class="action-row"><div class="abox'+(a.done?' done')+'">'+(a.done?'&#10003;':'')+'</div><span>'+a.label+'</span></div>';});html+='</div></div>';}
+  return html;
 }
- 
 function renderNotes(){
-  const calls=(data.notes||{}).calls||[];
-  if(!calls.length) return `<div class="card"><div class="empty">Call notes will appear here after your first call.</div></div>`;
-  return calls.map(c=>`
-    <div class="call-card">
-      <div class="call-header">
-        <div class="call-ico">${c.icon||'📞'}</div>
-        <div>
-          <div class="call-title-text">${c.title}</div>
-          <div class="call-meta-text">${c.date||''} · ${c.duration||''} · ${c.attendees||''}</div>
-        </div>
-      </div>
-      <div class="call-body">${(c.notes||[]).map(n=>`
-        <div class="note-block"><span class="note-lbl">${n.label}:</span> ${n.body}</div>`).join('')}
-      </div>
-    </div>`).join('');
+  var calls=(data.notes&&data.notes.calls)||[];
+  if(!calls.length)return '<div class="card"><div class="empty">Call notes will appear here after your first call.</div></div>';
+  return calls.map(function(c){return '<div class="call-card"><div class="call-header"><div class="call-ico">'+(c.icon||'📞')+'</div><div><div class="call-title-text">'+c.title+'</div><div class="call-meta-text">'+(c.date||'')+' · '+(c.duration||'')+' · '+(c.attendees||'')+'</div></div></div><div class="call-body">'+((c.notes||[]).map(function(n){return '<div class="note-block"><span class="note-lbl">'+n.label+':</span> '+n.body+'</div>';}).join(''))+'</div></div>';}).join('');
 }
- 
+function sc(s){if(!s)return 'ss-draft';var m={draft:'ss-draft',review:'ss-review',approved:'ss-approved',live:'ss-live'};return m[s.toLowerCase()]||'ss-draft';}
 function renderCopy(){
-  const tiers=(data.copy||{}).tiers||[];
-  const alrt=(data.copy||{}).alert||null;
-  if(!tiers.length) return `<div class="card"><div class="empty">Copywriting is being built. Sequences will appear here for your review before launch.</div></div>`;
-  const sc=s=>{if(!s)return'ss-draft';return{draft:'ss-draft',review:'ss-review',approved:'ss-approved',live:'ss-live'}[s.toLowerCase()]||'ss-draft';};
-  return `
-    ${alrt?`<div class="alert alert-${alrt.type||'warn'}"><div class="alert-title">${alrt.title}</div>${alrt.body}</div>`:''}
-    <div class="tier-grid">${tiers.slice(0,2).map(t=>`
-      <div class="tier-box">
-        <div class="tier-top"><span class="tier-name">${t.name}</span><span class="ss ${sc(t.status)}">${t.status||'Draft'}</span></div>
-        ${(t.sequences||[]).map(s=>`<div class="seq-row"><span class="ss ${sc(s.status)}">${s.status||'Draft'}</span>${s.name}</div>`).join('')}
-      </div>`).join('')}</div>
-    ${tiers.slice(2).map(t=>`
-      <div class="card">
-        <div class="card-title">${t.name}</div>
-        ${(t.sequences||[]).map(s=>`<div class="seq-row"><span class="ss ${sc(s.status)}">${s.status||'Draft'}</span>${s.name}</div>`).join('')}
-      </div>`).join('')}`;
+  var tiers=(data.copy&&data.copy.tiers)||[];
+  var alrt=data.copy&&data.copy.alert;
+  if(!tiers.length)return '<div class="card"><div class="empty">Copywriting is being built. Sequences will appear here for your review before launch.</div></div>';
+  var html=alrt?'<div class="alert alert-'+(alrt.type||'warn')+'"><div class="alert-title">'+alrt.title+'</div>'+alrt.body+'</div>':'';
+  html+='<div class="tier-grid">';
+  tiers.slice(0,2).forEach(function(t){html+='<div class="tier-box"><div class="tier-top"><span class="tier-name">'+t.name+'</span><span class="ss '+sc(t.status)+'">'+(t.status||'Draft')+'</span></div>'+((t.sequences||[]).map(function(s){return '<div class="seq-row"><span class="ss '+sc(s.status)+'">'+(s.status||'Draft')+'</span>'+s.name+'</div>';}).join(''))+'</div>';});
+  html+='</div>';
+  tiers.slice(2).forEach(function(t){html+='<div class="card"><div class="card-title">'+t.name+'</div>'+((t.sequences||[]).map(function(s){return '<div class="seq-row"><span class="ss '+sc(s.status)+'">'+(s.status||'Draft')+'</span>'+s.name+'</div>';}).join(''))+'</div>';});
+  return html;
 }
- 
 function renderSegments(){
-  const items=(data.segments||{}).items||[];
-  if(!items.length) return `<div class="card"><div class="empty">Segment hypotheses will be added after your onboarding call.</div></div>`;
-  const pc={1:'ss-approved',2:'ss-review',3:'ss-draft',4:'ss-draft'};
-  return items.map(s=>`
-    <div class="seg-box">
-      <div class="seg-head">
-        <div class="seg-title-text">${s.title}</div>
-        <span class="ss ${pc[s.priority]||'ss-draft'}">Priority ${s.priority}</span>
-      </div>
-      <div class="seg-desc">${s.description}</div>
-    </div>`).join('');
+  var items=(data.segments&&data.segments.items)||[];
+  if(!items.length)return '<div class="card"><div class="empty">Segment hypotheses will be added after your onboarding call.</div></div>';
+  var pc={1:'ss-approved',2:'ss-review',3:'ss-draft',4:'ss-draft'};
+  return items.map(function(s){return '<div class="seg-box"><div class="seg-head"><div class="seg-title-text">'+s.title+'</div><span class="ss '+(pc[s.priority]||'ss-draft')+'">Priority '+s.priority+'</span></div><div class="seg-desc">'+s.description+'</div></div>';}).join('');
 }
- 
 function renderLogins(){
-  const tools=(data.logins||{}).tools||[];
-  if(!tools.length) return `<div class="card"><div class="empty">Login credentials will be added here as your workspace is set up.</div></div>`;
-  return `<div class="card"><div class="card-title">Tool access — all credentials</div>${tools.map(t=>`
-    <div class="tool-row">
-      <div class="tool-ico">${t.icon||'🔗'}</div>
-      <div style="flex:1"><div class="tool-name">${t.name}</div><div class="tool-sub">${t.description||''}</div></div>
-      ${t.url?`<a class="tool-link" href="${t.url}" target="_blank">Open ›</a>`:''}
-    </div>`).join('')}</div>`;
+  var tools=(data.logins&&data.logins.tools)||[];
+  if(!tools.length)return '<div class="card"><div class="empty">Login credentials will be added here as your workspace is set up.</div></div>';
+  return '<div class="card"><div class="card-title">Tool access</div>'+tools.map(function(t){return '<div class="tool-row"><div class="tool-ico">'+(t.icon||'🔗')+'</div><div style="flex:1"><div class="tool-name">'+t.name+'</div><div class="tool-sub">'+(t.description||'')+'</div></div>'+(t.url?'<a class="tool-link" href="'+t.url+'" target="_blank">Open</a>':'')+'</div>';}).join('')+'</div>';
 }
- 
 function renderDomains(){
-  const domains=(data.domains||{}).items||[];
-  const files=(data.domains||{}).files||[];
-  return `
-    <div class="card">
-      <div class="card-title">Sending domains — warmup status</div>
-      ${domains.length?domains.map(d=>`
-        <div class="domain-row">
-          <div><div class="d-name">${d.name}</div><div class="d-sub">${d.sub||'DNS configured'}</div></div>
-          <div style="text-align:right">
-            <div class="warmup-pct">Day ${d.day||1} · ${d.pct||0}% warm</div>
-            <div class="warmup-bar"><div class="warmup-fill" style="width:${d.pct||0}%"></div></div>
-          </div>
-        </div>`).join(''):`<div class="empty">Domains are being purchased and configured.</div>`}
-    </div>
-    ${files.length?`<div class="card"><div class="card-title">Prospect data & assets</div>${files.map(f=>`
-      <div class="tool-row">
-        <div class="tool-ico">📊</div>
-        <div style="flex:1"><div class="tool-name">${f.name}</div><div class="tool-sub">${f.description||''}</div></div>
-        ${f.url?`<a class="tool-link" href="${f.url}" target="_blank">Download ›</a>`:''}
-      </div>`).join('')}</div>`:''}`;
+  var domains=(data.domains&&data.domains.items)||[];
+  var files=(data.domains&&data.domains.files)||[];
+  var html='<div class="card"><div class="card-title">Sending domains</div>';
+  if(domains.length){domains.forEach(function(d){html+='<div class="domain-row"><div><div class="d-name">'+d.name+'</div><div class="d-sub">'+(d.sub||'DNS configured')+'</div></div><div style="text-align:right"><div class="warmup-pct">Day '+(d.day||1)+' · '+(d.pct||0)+'% warm</div><div class="warmup-bar"><div class="warmup-fill" style="width:'+(d.pct||0)+'%"></div></div></div></div>';});}
+  else html+='<div class="empty">Domains are being purchased and configured.</div>';
+  html+='</div>';
+  if(files.length){html+='<div class="card"><div class="card-title">Prospect data</div>'+files.map(function(f){return '<div class="tool-row"><div class="tool-ico">📊</div><div style="flex:1"><div class="tool-name">'+f.name+'</div><div class="tool-sub">'+(f.description||'')+'</div></div>'+(f.url?'<a class="tool-link" href="'+f.url+'" target="_blank">Download</a>':'')+'</div>';}).join('')+'</div>';}
+  return html;
 }
- 
 function renderICP(){
-  const icp=data.icp||{};
-  const attrs=icp.profile||[];
-  const negs=icp.negative||[];
-  const quotes=icp.quotes||[];
-  return `
-    ${attrs.length?`<div class="card"><div class="card-title">ICP profile — best customer pattern</div>
-      <div class="icp-grid">${attrs.map(a=>`
-        <div class="icp-attr"><div class="icp-attr-lbl">${a.label}</div><div class="icp-attr-val">${a.value}</div></div>`).join('')}
-      </div></div>`:`<div class="card"><div class="empty">ICP research will appear here after your onboarding call.</div></div>`}
-    ${negs.length?`<div class="card"><div class="card-title">Negative ICP — who we exclude</div>
-      ${negs.map(n=>`<div class="neg-row"><span class="neg-lbl">${n.label}</span>${n.value}</div>`).join('')}
-    </div>`:''}
-    ${quotes.length?`<div class="card"><div class="card-title">Voice of customer — exact language</div>
-      ${quotes.map(q=>`<div class="voc-q">"${q}"</div>`).join('')}
-    </div>`:''}`;
+  var icp=data.icp||{};
+  var attrs=icp.profile||[];
+  var negs=icp.negative||[];
+  var quotes=icp.quotes||[];
+  var html='';
+  if(attrs.length){html+='<div class="card"><div class="card-title">ICP profile</div><div class="icp-grid">'+attrs.map(function(a){return '<div class="icp-attr"><div class="icp-attr-lbl">'+a.label+'</div><div class="icp-attr-val">'+a.value+'</div></div>';}).join('')+'</div></div>';}
+  else html+='<div class="card"><div class="empty">ICP research will appear here after your onboarding call.</div></div>';
+  if(negs.length)html+='<div class="card"><div class="card-title">Negative ICP</div>'+negs.map(function(n){return '<div class="neg-row"><span class="neg-lbl">'+n.label+'</span>'+n.value+'</div>';}).join('')+'</div>';
+  if(quotes.length)html+='<div class="card"><div class="card-title">Voice of customer</div>'+quotes.map(function(q){return '<div class="voc-q">"'+q+'"</div>';}).join('')+'</div>';
+  return html;
 }
- 
-let allClients=[];
-async function renderAdminSection(){
-  const el=document.getElementById('content');
-  el.innerHTML=`<div style="color:var(--muted);font-size:13px">Loading clients...</div>`;
-  const {data:clients}=await sb.from('clients').select('*').order('created_at',{ascending:false});
-  allClients=clients||[];
-  const stlabels={build:'Building',warming:'Warming',live:'Live',paused:'Paused'};
-  const stcls={build:'pill-build',warming:'pill-warming',live:'pill-live',paused:'pill-paused'};
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-size:14px;font-weight:600">All client workspaces (${clients.length})</div>
-    </div>
-    <div class="admin-clients">${clients.map(c=>`
-      <div class="admin-client-card" onclick="adminViewClient('${c.id}')">
-        <div class="acc-name">${c.company_name||c.name}</div>
-        <div class="acc-meta">Started ${c.start_date?new Date(c.start_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'} · Launch ${c.launch_date?new Date(c.launch_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—'}</div>
-        <div class="acc-status"><span class="status-pill ${stcls[c.status]||'pill-build'}"><span class="sdot"></span>${stlabels[c.status]||c.status}</span></div>
-      </div>`).join('')}
-    </div>`;
+async function renderAdmin(){
+  var el=document.getElementById('content');
+  el.innerHTML='<div style="color:var(--muted);font-size:13px">Loading clients...</div>';
+  var res=await sb.from('clients').select('*').order('created_at',{ascending:false});
+  var clients=res.data||[];
+  var stl={build:'Building',warming:'Warming',live:'Live',paused:'Paused'};
+  var stc={build:'pill-build',warming:'pill-warming',live:'pill-live',paused:'pill-paused'};
+  var html='<div style="font-size:14px;font-weight:600;margin-bottom:16px">All client workspaces ('+clients.length+')</div><div class="admin-clients">';
+  clients.forEach(function(c){html+='<div class="admin-client-card" onclick="adminView(\''+c.id+'\')"><div class="acc-name">'+(c.company_name||c.name)+'</div><div class="acc-meta">Started '+(c.start_date?new Date(c.start_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—')+' · Launch '+(c.launch_date?new Date(c.launch_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—')+'</div><div class="acc-status"><span class="status-pill '+(stc[c.status]||'pill-build')+'"><span class="sdot"></span>'+(stl[c.status]||c.status)+'</span></div></div>';});
+  el.innerHTML=html+'</div>';
 }
- 
-async function adminViewClient(clientId){
-  await loadClient(clientId);
+async function adminView(clientId){
+  var cr=await sb.from('clients').select('*').eq('id',clientId).single();
+  client=cr.data;
+  var dr=await sb.from('client_data').select('*').eq('client_id',clientId);
+  data={};if(dr.data){dr.data.forEach(function(r){data[r.section]=r.data;});}
   renderChrome();
-  const el=document.getElementById('content');
-  el.innerHTML=`<div class="admin-back" onclick="backToAdmin()">← Back to all clients</div>`+renderDashboard();
+  var el=document.getElementById('content');
+  el.innerHTML='<div class="admin-back" onclick="backToAdmin()">← Back to all clients</div>'+renderDashboard();
 }
- 
-function backToAdmin(){
-  loadAdmin().then(()=>{renderChrome();nav('admin',document.getElementById('nav-admin'));});
-}
- 
-init();
+function backToAdmin(){client={company_name:'Admin View',status:'live'};data={};renderChrome();nav('admin',document.getElementById('nav-admin'));}
 </script>
 </body>
 </html>
