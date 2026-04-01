@@ -498,6 +498,14 @@ async function createWorkspace(){
       {client_id:cid,section:'icp',data:{profile:[],negative:[],quotes:[]}}
     ];
     await sb.from('client_data').insert(sections);
+    // NOW create the user — this changes the active session
+    var ar=await sb.auth.signUp({email:em,password:pw});
+    if(ar.error)throw ar.error;
+    var uid=ar.data.user.id;
+    // Link profile — new user can update their own profile row
+    await sb.from('profiles').upsert({id:uid,is_admin:false,client_id:cid},{onConflict:'id'});
+    // Restore Kyle's admin session
+    if(kSess)await sb.auth.setSession({access_token:kSess.access_token,refresh_token:kSess.refresh_token});
     document.getElementById('setup-form').style.display='none';
     var suc=document.getElementById('fsuc');
     document.getElementById('fsuc-details').innerHTML='<strong>'+co+'</strong> workspace is live.<br>Email: '+em+'<br>Password: '+pw+'<br><br>Copy these credentials and send them to your client. They can log in at this portal URL right now.';
