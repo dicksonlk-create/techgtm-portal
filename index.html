@@ -317,7 +317,7 @@ function renderDB(){
   if(tl.length){tl.forEach(function(t){h+='<div class="tlr"><div class="tld '+(t.status==='done'?'tdn':t.status==='current'?'tcu':'tup')+'"></div><div class="tll">'+t.label+'</div><div class="tla">'+(t.date||'')+'</div><span class="tlb '+(t.status==='done'?'bdn':t.status==='current'?'bcu':'bup')+'">'+(t.status==='done'?'Done':t.status==='current'?'In progress':t.date||'Upcoming')+'</span></div>';});}
   else h+='<div class="empty">Timeline will appear here.</div>';
   h+='</div>';
-  if(acts.length){h+='<div class="card"><div class="ct">Your action items</div><div class="al">';acts.forEach(function(a){h+='<div class="ar"><div class="ab'+(a.done?' done')+'">'+(a.done?'&#10003;':'')+'</div><span>'+a.label+'</span></div>';});h+='</div></div>';}
+  if(acts.length){h+='<div class="card"><div class="ct">Your action items</div><div class="al">';acts.forEach(function(a){h+='<div class="ar"><div class="ab'+(a.done?' done':'')+'">'+(a.done?'&#10003;':'')+'</div><span>'+a.label+'</span></div>';});h+='</div></div>';}
   return h;
 }
 function showEditKPIs(){
