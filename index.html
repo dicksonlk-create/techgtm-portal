@@ -121,6 +121,7 @@ a{color:var(--info);text-decoration:none}a:hover{text-decoration:underline}
 .fl{font-size:12px;font-weight:500;margin-bottom:5px;display:block}
 .fn{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;color:var(--text)}
 .fn:focus{border-color:var(--blue)}
+.fn[rows]{resize:vertical;min-height:80px}
 .fbtn{padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
 .fbtn:hover{background:#162d55}.fbtn.sec{background:var(--bg);color:var(--text);border:1px solid var(--border);margin-right:8px}
 .fbtn.sec:hover{background:var(--border)}
@@ -355,9 +356,16 @@ async function saveKPIs(){
 }
 function renderNotes(){
   var calls=(data.notes&&data.notes.calls)||[];
-  if(!calls.length)return'<div class="card"><div class="empty">Call notes will appear here after your first call.</div></div>';
-  return calls.map(function(c){return'<div class="cc"><div class="ch"><div class="ci">'+(c.icon||'📞')+'</div><div><div class="ctt">'+c.title+'</div><div class="cm">'+(c.date||'')+' · '+(c.duration||'')+' · '+(c.attendees||'')+'</div></div></div><div class="cb">'+((c.notes||[]).map(function(n){return'<div class="nb"><span class="nl2">'+n.label+':</span> '+n.body+'</div>';}).join(''))+'</div></div>';}).join('');
+  var editBtn=isAdminView?'<button onclick="openEdit(\'notes\')" class="ebtn" style="font-size:11px;padding:5px 12px">+ Add Call</button>':'';
+  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:14px;font-weight:600">Call Notes</span>'+editBtn+'</div>';
+  if(!calls.length)return hdr+'<div class="card"><div class="empty">Call notes will appear here after your first call.</div></div>';
+  return hdr+calls.map(function(c,ci){
+    var fLink=c.fathom_url?'<a href="'+c.fathom_url+'" target="_blank" style="font-size:11px;color:var(--info);margin-left:8px">Watch recording ›</a>':'';
+    var delBtn=isAdminView?'<button onclick="deleteCall('+ci+')" class="del-btn">Delete</button>':'';
+    return'<div class="cc"><div class="ch"><div class="ci">'+(c.icon||'📞')+'</div><div style="flex:1"><div class="ctt">'+c.title+fLink+'</div><div class="cm">'+(c.date||'')+' · '+(c.duration||'')+' · '+(c.attendees||'')+'</div></div>'+delBtn+'</div><div class="cb">'+((c.notes||[]).map(function(n){return'<div class="nb"><span class="nl2">'+n.label+':</span> '+n.body+'</div>';}).join(''))+'</div></div>';
+  }).join('');
 }
+
 function sc(s){if(!s)return'sd';var m={draft:'sd',review:'sv',approved:'sa',live:'sl'};return m[s.toLowerCase()]||'sd';}
 function renderCopy(){
   var tiers=(data.copy&&data.copy.tiers)||[];
@@ -372,35 +380,47 @@ function renderCopy(){
 }
 function renderSegs(){
   var items=(data.segments&&data.segments.items)||[];
-  if(!items.length)return'<div class="card"><div class="empty">Segment hypotheses will be added after your onboarding call.</div></div>';
+  var editBtn=isAdminView?'<button onclick="openEdit(\'segs\')" class="ebtn" style="font-size:11px;padding:5px 12px">Edit</button>':'';
+  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:14px;font-weight:600">Campaign Hypothesis</span>'+editBtn+'</div>';
+  if(!items.length)return hdr+'<div class="card"><div class="empty">Segment hypotheses will be added after your onboarding call.</div></div>';
   var pc={1:'sa',2:'sv',3:'sd',4:'sd'};
-  return items.map(function(s){return'<div class="sg"><div class="sh"><div class="stx">'+s.title+'</div><span class="ss '+(pc[s.priority]||'sd')+'">Priority '+s.priority+'</span></div><div class="sdx">'+s.description+'</div></div>';}).join('');
+  return hdr+items.map(function(s){return'<div class="sg"><div class="sh"><div class="stx">'+s.title+'</div><span class="ss '+(pc[s.priority]||'sd')+'">Priority '+s.priority+'</span></div><div class="sdx">'+s.description+'</div></div>';}).join('');
 }
+
 function renderLogin(){
   var tools=(data.logins&&data.logins.tools)||[];
-  if(!tools.length)return'<div class="card"><div class="empty">Login credentials will be added here as your workspace is set up.</div></div>';
-  return'<div class="card"><div class="ct">Tool access — all credentials</div>'+tools.map(function(t){return'<div class="tr"><div class="ti">'+(t.icon||'🔗')+'</div><div style="flex:1"><div class="tna">'+t.name+'</div><div class="tsu">'+(t.description||'')+'</div></div>'+(t.url?'<a class="tlk" href="'+t.url+'" target="_blank">Open ›</a>':'')+'</div>';}).join('')+'</div>';
+  var editBtn=isAdminView?'<button onclick="openEdit(\'login\')" class="ebtn" style="font-size:11px;padding:5px 12px">Edit Links</button>':'';
+  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:14px;font-weight:600">Login Sheet</span>'+editBtn+'</div>';
+  if(!tools.length)return hdr+'<div class="card"><div class="empty">Login credentials will be added here as your workspace is set up.</div></div>';
+  return hdr+'<div class="card"><div class="ct">Tool access — all credentials</div>'+tools.map(function(t){return'<div class="tr"><div class="ti">'+(t.icon||'🔗')+'</div><div style="flex:1"><div class="tna">'+t.name+'</div><div class="tsu">'+(t.description||'')+'</div></div>'+(t.url?'<a class="tlk" href="'+t.url+'" target="_blank">Open ›</a>':'')+'</div>';}).join('')+'</div>';
 }
+
 function renderDom(){
   var doms=(data.domains&&data.domains.items)||[];
   var files=(data.domains&&data.domains.files)||[];
-  var h='<div class="card"><div class="ct">Sending domains — warmup status</div>';
+  var editBtn=isAdminView?'<button onclick="openEdit(\'dom\')" class="ebtn" style="font-size:11px;padding:5px 12px">Edit</button>':'';
+  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:14px;font-weight:600">Domains & Data</span>'+editBtn+'</div>';
+  var h=hdr+'<div class="card"><div class="ct">Sending domains — warmup status</div>';
   if(doms.length)doms.forEach(function(d){h+='<div class="dr"><div><div class="dn">'+d.name+'</div><div class="ds">'+(d.sub||'DNS configured')+'</div></div><div style="text-align:right"><div class="wp">Day '+(d.day||1)+' · '+(d.pct||0)+'% warm</div><div class="wb"><div class="wf" style="width:'+(d.pct||0)+'%"></div></div></div></div>';});
   else h+='<div class="empty">Domains are being purchased and configured.</div>';
   h+='</div>';
   if(files.length)h+='<div class="card"><div class="ct">Prospect data & assets</div>'+files.map(function(f){return'<div class="tr"><div class="ti">📊</div><div style="flex:1"><div class="tna">'+f.name+'</div><div class="tsu">'+(f.description||'')+'</div></div>'+(f.url?'<a class="tlk" href="'+f.url+'" target="_blank">Download ›</a>':'')+'</div>';}).join('')+'</div>';
   return h;
 }
+
 function renderICP(){
   var icp=data.icp||{};
   var attrs=icp.profile||[],negs=icp.negative||[],quotes=icp.quotes||[];
-  var h='';
+  var editBtn=isAdminView?'<button onclick="openEdit(\'icp\')" class="ebtn" style="font-size:11px;padding:5px 12px">Edit</button>':'';
+  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:14px;font-weight:600">CRM Mining & ICP</span>'+editBtn+'</div>';
+  var h=hdr;
   if(attrs.length)h+='<div class="card"><div class="ct">ICP profile — best customer pattern</div><div class="ig">'+attrs.map(function(a){return'<div class="ia"><div class="ial">'+a.label+'</div><div class="iav">'+a.value+'</div></div>';}).join('')+'</div></div>';
   else h+='<div class="card"><div class="empty">ICP research will appear here after your onboarding call.</div></div>';
   if(negs.length)h+='<div class="card"><div class="ct">Negative ICP — who we exclude</div>'+negs.map(function(n){return'<div class="nr"><span class="nrl">'+n.label+'</span>'+n.value+'</div>';}).join('')+'</div>';
   if(quotes.length)h+='<div class="card"><div class="ct">Voice of customer</div>'+quotes.map(function(q){return'<div class="vq">"'+q+'"</div>';}).join('')+'</div>';
   return h;
 }
+
 async function renderAdmin(){
   isAdminView=false;
   var el=document.getElementById('content');
@@ -420,10 +440,21 @@ async function adminView(cid){
   await loadClient(cid);
   isAdminView=true;
   renderChrome();
+  var sels='<select class="stat-sel" onchange="updateStatus(\''+cid+'\',this.value)" style="font-size:12px;margin-left:8px">';
+  sels+='<option value="build"'+(client.status==='build'?' selected':'')+'>Building</option>';
+  sels+='<option value="warming"'+(client.status==='warming'?' selected':'')+'>Warming</option>';
+  sels+='<option value="live"'+(client.status==='live'?' selected':'')+'>Live</option>';
+  sels+='<option value="paused"'+(client.status==='paused'?' selected':'')+'>Paused</option>';
+  sels+='</select>';
+  var topBar='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">';
+  topBar+='<div style="display:flex;align-items:center"><span class="bk" onclick="backToAdmin()" style="margin-bottom:0;margin-right:12px">← All clients</span><span style="font-size:13px;color:var(--muted)">Status:'+sels+'</span></div>';
+  topBar+='<button onclick="deleteWorkspace(\''+cid+'\',\''+client.company_name+'\')" style="padding:6px 14px;background:var(--rbg);color:var(--red);border:1px solid #fecaca;border-radius:7px;font-size:12px;cursor:pointer">Delete Workspace</button>';
+  topBar+='</div>';
   nav('db',document.getElementById('n-db'));
   var el=document.getElementById('content');
-  el.innerHTML='<div class="bk" onclick="backToAdmin()">← Back to all clients</div>'+renderDB();
+  el.innerHTML=topBar+renderDB();
 }
+
 function backToAdmin(){isAdminView=false;client={company_name:'Admin View',status:'live'};data={};viewId=null;renderChrome();nav('admin',document.getElementById('n-admin'));}
 function openSetup(){
   document.getElementById('ferr').style.display='none';
@@ -511,6 +542,328 @@ async function createWorkspace(){
   }
   btn.textContent='Create Workspace';btn.disabled=false;
 }
+
+// ── OPEN EDIT OVERLAY ──────────────────────────────────────
+function openEdit(sec){
+  var oc=document.getElementById('ocard');
+  if(sec==='notes') oc.innerHTML=editNotesForm();
+  else if(sec==='timeline') oc.innerHTML=editTimelineForm();
+  else if(sec==='copy') oc.innerHTML=editCopyForm();
+  else if(sec==='segs') oc.innerHTML=editSegsForm();
+  else if(sec==='login') oc.innerHTML=editLoginForm();
+  else if(sec==='dom') oc.innerHTML=editDomForm();
+  else if(sec==='icp') oc.innerHTML=editICPForm();
+  document.getElementById('overlay').style.display='flex';
+}
+
+// ── CALL NOTES ─────────────────────────────────────────────
+function editNotesForm(){
+  var calls=(data.notes&&data.notes.calls)||[];
+  var h='<div class="oh">Add Call Note</div><div class="os">Fill in the details. Fathom link is optional but recommended.</div>';
+  h+='<div class="fg"><div><label class="fl">Call title</label><input class="fn" id="cn-title" placeholder="Onboarding Call"></div>';
+  h+='<div><label class="fl">Date</label><input class="fn" id="cn-date" type="date"></div></div>';
+  h+='<div class="fg"><div><label class="fl">Duration</label><input class="fn" id="cn-dur" placeholder="60 min"></div>';
+  h+='<div><label class="fl">Attendees</label><input class="fn" id="cn-att" placeholder="Kyle + Sarah Chen"></div></div>';
+  h+='<div class="fg full"><div><label class="fl">Fathom recording URL (optional)</label><input class="fn" id="cn-fathom" placeholder="https://fathom.video/..."></div></div>';
+  h+='<div class="fg full" style="margin-bottom:16px"><div><label class="fl">Key notes / summary</label><textarea class="fn" id="cn-notes" rows="5" placeholder="What was discussed, key takeaways, next steps..."></textarea></div></div>';
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveCall()">Add Call</button></div>';
+  if(calls.length){
+    h+='<div style="border-top:1px solid var(--border);padding-top:16px;margin-top:20px">';
+    h+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Existing Calls</div>';
+    calls.forEach(function(c,i){
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg)">';
+      h+='<div><div style="font-size:13px;font-weight:500">'+c.title+'</div><div style="font-size:11px;color:var(--muted)">'+(c.date||'')+'</div></div>';
+      h+='<button onclick="deleteCall('+i+')" class="del-btn">Delete</button>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+  return h;
+}
+async function saveCall(){
+  var calls=(data.notes&&data.notes.calls)||[];
+  var notes=document.getElementById('cn-notes').value;
+  var dateVal=document.getElementById('cn-date').value;
+  var dateStr=dateVal?new Date(dateVal).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+  var call={
+    icon:'📞',
+    title:document.getElementById('cn-title').value||'Call',
+    date:dateStr,
+    duration:document.getElementById('cn-dur').value,
+    attendees:document.getElementById('cn-att').value,
+    fathom_url:document.getElementById('cn-fathom').value,
+    notes:notes?[{label:'Summary',body:notes}]:[]
+  };
+  calls.unshift(call);
+  var nd={calls:calls};
+  await sb.from('client_data').upsert({client_id:viewId,section:'notes',data:nd},{onConflict:'client_id,section'});
+  data.notes=nd;
+  closeSetup();
+  nav('notes',document.getElementById('n-notes'));
+}
+async function deleteCall(idx){
+  var calls=(data.notes&&data.notes.calls)||[];
+  calls.splice(idx,1);
+  var nd={calls:calls};
+  await sb.from('client_data').upsert({client_id:viewId,section:'notes',data:nd},{onConflict:'client_id,section'});
+  data.notes=nd;
+  openEdit('notes');
+}
+
+// ── TIMELINE ───────────────────────────────────────────────
+var tlEdits={};
+function editTimelineForm(){
+  var items=(data.timeline&&data.timeline.items)||[];
+  tlEdits={};
+  var h='<div class="oh">Edit Timeline</div><div class="os">Toggle each step status. Save when done.</div>';
+  items.forEach(function(item,i){
+    var sel='<select class="stat-sel" onchange="tlEdits['+i+']=this.value">';
+    sel+='<option value="done"'+(item.status==='done'?' selected':'')+'>Done</option>';
+    sel+='<option value="current"'+(item.status==='current'?' selected':'')+'>In Progress</option>';
+    sel+='<option value="upcoming"'+(item.status==='upcoming'?' selected':'')+'>Upcoming</option>';
+    sel+='</select>';
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bg)">';
+    h+='<div style="flex:1;font-size:13px">'+item.label+'</div>'+sel+'</div>';
+  });
+  h+='<div style="margin-top:16px;display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveTimeline()">Save</button></div>';
+  return h;
+}
+async function saveTimeline(){
+  var items=(data.timeline&&data.timeline.items)||[];
+  Object.keys(tlEdits).forEach(function(i){if(items[i])items[i].status=tlEdits[i];});
+  tlEdits={};
+  var nd={items:items};
+  await sb.from('client_data').upsert({client_id:viewId,section:'timeline',data:nd},{onConflict:'client_id,section'});
+  data.timeline=nd;
+  closeSetup();
+  nav('db',document.getElementById('n-db'));
+}
+
+// ── COPYWRITING ────────────────────────────────────────────
+var cpEdits={};
+function editCopyForm(){
+  var tiers=(data.copy&&data.copy.tiers)||[];
+  cpEdits={};
+  var statuses=['Draft','Review','Approved','Live'];
+  var h='<div class="oh">Edit Copywriting Status</div><div class="os">Update sequence statuses as they progress.</div>';
+  tiers.forEach(function(tier,ti){
+    h+='<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin:14px 0 6px">'+tier.name+'</div>';
+    (tier.sequences||[]).forEach(function(seq,si){
+      var key=ti+'-'+si;
+      var sel='<select class="stat-sel" data-key="'+key+'" data-ti="'+ti+'" data-si="'+si+'" onchange="cpEdits[this.dataset.key]={ti:parseInt(this.dataset.ti),si:parseInt(this.dataset.si),val:this.value}">';
+      statuses.forEach(function(st){
+        sel+='<option value="'+st+'"'+(seq.status===st?' selected':'')+'>'+st+'</option>';
+      });
+      sel+='</select>';
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bg)">';
+      h+='<div style="flex:1;font-size:13px">'+seq.name+'</div>'+sel+'</div>';
+    });
+  });
+  h+='<div style="margin-top:16px;display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveCopy()">Save</button></div>';
+  return h;
+}
+async function saveCopy(){
+  var tiers=(data.copy&&data.copy.tiers)||[];
+  Object.keys(cpEdits).forEach(function(k){
+    var e=cpEdits[k];
+    if(tiers[e.ti]&&tiers[e.ti].sequences[e.si])tiers[e.ti].sequences[e.si].status=e.val;
+  });
+  cpEdits={};
+  var nd={tiers:tiers,alert:data.copy?data.copy.alert:null};
+  await sb.from('client_data').upsert({client_id:viewId,section:'copy',data:nd},{onConflict:'client_id,section'});
+  data.copy=nd;
+  closeSetup();
+  nav('copy',document.getElementById('n-copy'));
+}
+
+// ── SEGMENTS ───────────────────────────────────────────────
+function editSegsForm(){
+  var items=(data.segments&&data.segments.items)||[];
+  var h='<div class="oh">Campaign Hypothesis</div><div class="os">Add a new segment or remove existing ones.</div>';
+  h+='<div class="fg"><div><label class="fl">Segment title</label><input class="fn" id="sg-title" placeholder="VP Sales · Fintech · Series B · 100-300 employees"></div><div><label class="fl">Priority</label><select class="fn" id="sg-pri"><option value="1">Priority 1</option><option value="2">Priority 2</option><option value="3">Priority 3</option><option value="4">Priority 4</option></select></div></div>';
+  h+='<div class="fg full" style="margin-bottom:16px"><div><label class="fl">Description</label><textarea class="fn" id="sg-desc" rows="3" placeholder="Who they are, why they fit, what Clay signals to use..."></textarea></div></div>';
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveSeg()">Add Segment</button></div>';
+  if(items.length){
+    h+='<div style="border-top:1px solid var(--border);padding-top:16px;margin-top:20px">';
+    h+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Existing Segments</div>';
+    items.forEach(function(s,i){
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg)">';
+      h+='<div style="font-size:13px;flex:1">'+s.title+'</div>';
+      h+='<span style="font-size:11px;color:var(--muted);margin:0 10px">P'+s.priority+'</span>';
+      h+='<button onclick="deleteSeg('+i+')" class="del-btn">Delete</button></div>';
+    });
+    h+='</div>';
+  }
+  return h;
+}
+async function saveSeg(){
+  var items=(data.segments&&data.segments.items)||[];
+  items.push({
+    title:document.getElementById('sg-title').value||'New segment',
+    priority:parseInt(document.getElementById('sg-pri').value)||1,
+    description:document.getElementById('sg-desc').value||''
+  });
+  items.sort(function(a,b){return a.priority-b.priority;});
+  var nd={items:items};
+  await sb.from('client_data').upsert({client_id:viewId,section:'segments',data:nd},{onConflict:'client_id,section'});
+  data.segments=nd;
+  openEdit('segs');
+}
+async function deleteSeg(idx){
+  var items=(data.segments&&data.segments.items)||[];
+  items.splice(idx,1);
+  var nd={items:items};
+  await sb.from('client_data').upsert({client_id:viewId,section:'segments',data:nd},{onConflict:'client_id,section'});
+  data.segments=nd;
+  openEdit('segs');
+}
+
+// ── LOGIN SHEET ────────────────────────────────────────────
+function editLoginForm(){
+  var tools=(data.logins&&data.logins.tools)||[];
+  var h='<div class="oh">Edit Login Sheet</div><div class="os">Update the URLs for each tool.</div>';
+  tools.forEach(function(t,i){
+    h+='<div style="margin-bottom:12px"><label class="fl">'+t.icon+' '+t.name+'</label>';
+    h+='<input class="fn" id="lt-'+i+'" value="'+(t.url||'')+'" placeholder="https://..."></div>';
+  });
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveLogins()">Save</button></div>';
+  return h;
+}
+async function saveLogins(){
+  var tools=(data.logins&&data.logins.tools)||[];
+  tools.forEach(function(t,i){
+    var el=document.getElementById('lt-'+i);
+    if(el)t.url=el.value;
+  });
+  var nd={tools:tools};
+  await sb.from('client_data').upsert({client_id:viewId,section:'logins',data:nd},{onConflict:'client_id,section'});
+  data.logins=nd;
+  closeSetup();
+  nav('login',document.getElementById('n-login'));
+}
+
+// ── DOMAINS ────────────────────────────────────────────────
+function editDomForm(){
+  var doms=(data.domains&&data.domains.items)||[];
+  var h='<div class="oh">Domains & Data</div><div class="os">Add a sending domain and its warmup progress.</div>';
+  h+='<div class="fg"><div><label class="fl">Domain name</label><input class="fn" id="dm-name" placeholder="getacmesales.com"></div>';
+  h+='<div><label class="fl">Warmup day</label><input class="fn" id="dm-day" type="number" placeholder="1" min="1" max="14"></div></div>';
+  h+='<div class="fg" style="margin-bottom:16px"><div><label class="fl">Warmup % (0-100)</label><input class="fn" id="dm-pct" type="number" placeholder="21" min="0" max="100"></div>';
+  h+='<div><label class="fl">Status note</label><input class="fn" id="dm-sub" placeholder="DNS configured · Parking page live"></div></div>';
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveDomain()">Add Domain</button></div>';
+  if(doms.length){
+    h+='<div style="border-top:1px solid var(--border);padding-top:16px;margin-top:20px">';
+    h+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Existing Domains</div>';
+    doms.forEach(function(d,i){
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg)">';
+      h+='<div><div style="font-size:13px;font-weight:500">'+d.name+'</div><div style="font-size:11px;color:var(--muted)">Day '+d.day+' · '+d.pct+'%</div></div>';
+      h+='<button onclick="deleteDomain('+i+')" class="del-btn">Delete</button></div>';
+    });
+    h+='</div>';
+  }
+  return h;
+}
+async function saveDomain(){
+  var doms=(data.domains&&data.domains.items)||[];
+  doms.push({
+    name:document.getElementById('dm-name').value||'domain.com',
+    day:parseInt(document.getElementById('dm-day').value)||1,
+    pct:parseInt(document.getElementById('dm-pct').value)||0,
+    sub:document.getElementById('dm-sub').value||'DNS configured'
+  });
+  var nd={items:doms,files:(data.domains&&data.domains.files)||[]};
+  await sb.from('client_data').upsert({client_id:viewId,section:'domains',data:nd},{onConflict:'client_id,section'});
+  data.domains=nd;
+  openEdit('dom');
+}
+async function deleteDomain(idx){
+  var doms=(data.domains&&data.domains.items)||[];
+  doms.splice(idx,1);
+  var nd={items:doms,files:(data.domains&&data.domains.files)||[]};
+  await sb.from('client_data').upsert({client_id:viewId,section:'domains',data:nd},{onConflict:'client_id,section'});
+  data.domains=nd;
+  openEdit('dom');
+}
+
+// ── ICP ─────────────────────────────────────────────────────
+function editICPForm(){
+  var icp=data.icp||{};
+  var attrs=icp.profile||[],negs=icp.negative||[],quotes=icp.quotes||[];
+  var h='<div class="oh">CRM Mining & ICP</div><div class="os">Add ICP attributes, negative ICP, or voice of customer quotes.</div>';
+  h+='<div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)">Add ICP attribute</div>';
+  h+='<div class="fg" style="margin-bottom:14px"><div><label class="fl">Label</label><input class="fn" id="icp-lbl" placeholder="Industry"></div><div><label class="fl">Value</label><input class="fn" id="icp-val" placeholder="Fintech, HR Tech"></div></div>';
+  h+='<button class="fbtn" style="margin-bottom:16px" onclick="saveICPAttr()">Add Attribute</button>';
+  h+='<div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)">Add negative ICP</div>';
+  h+='<div class="fg" style="margin-bottom:14px"><div><label class="fl">Label</label><input class="fn" id="neg-lbl" placeholder="Industry"></div><div><label class="fl">Value</label><input class="fn" id="neg-val" placeholder="Healthcare, legal..."></div></div>';
+  h+='<button class="fbtn" style="margin-bottom:16px" onclick="saveNegICP()">Add Negative</button>';
+  h+='<div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)">Add voice of customer quote</div>';
+  h+='<div class="fg full" style="margin-bottom:14px"><div><label class="fl">Quote</label><input class="fn" id="voc-q" placeholder="We are flying blind on pipeline..."></div></div>';
+  h+='<button class="fbtn" style="margin-bottom:16px" onclick="saveVOC()">Add Quote</button>';
+  h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="fbtn sec" onclick="closeSetup()">Done</button></div>';
+  if(attrs.length){
+    h+='<div style="border-top:1px solid var(--border);padding-top:14px;margin-top:16px"><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:8px">ICP ATTRIBUTES</div>';
+    attrs.forEach(function(a,i){h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bg)"><span style="font-size:12px"><b>'+a.label+':</b> '+a.value+'</span><button onclick="deleteICPAttr('+i+')" class="del-btn">Delete</button></div>';});
+    h+='</div>';
+  }
+  return h;
+}
+async function saveICPAttr(){
+  var icp=data.icp||{};
+  var attrs=icp.profile||[];
+  attrs.push({label:document.getElementById('icp-lbl').value,value:document.getElementById('icp-val').value});
+  var nd=Object.assign({},icp,{profile:attrs});
+  await sb.from('client_data').upsert({client_id:viewId,section:'icp',data:nd},{onConflict:'client_id,section'});
+  data.icp=nd;
+  openEdit('icp');
+}
+async function saveNegICP(){
+  var icp=data.icp||{};
+  var negs=icp.negative||[];
+  negs.push({label:document.getElementById('neg-lbl').value,value:document.getElementById('neg-val').value});
+  var nd=Object.assign({},icp,{negative:negs});
+  await sb.from('client_data').upsert({client_id:viewId,section:'icp',data:nd},{onConflict:'client_id,section'});
+  data.icp=nd;
+  openEdit('icp');
+}
+async function saveVOC(){
+  var icp=data.icp||{};
+  var qs=icp.quotes||[];
+  qs.push(document.getElementById('voc-q').value);
+  var nd=Object.assign({},icp,{quotes:qs});
+  await sb.from('client_data').upsert({client_id:viewId,section:'icp',data:nd},{onConflict:'client_id,section'});
+  data.icp=nd;
+  openEdit('icp');
+}
+async function deleteICPAttr(idx){
+  var icp=data.icp||{};
+  var attrs=icp.profile||[];
+  attrs.splice(idx,1);
+  var nd=Object.assign({},icp,{profile:attrs});
+  await sb.from('client_data').upsert({client_id:viewId,section:'icp',data:nd},{onConflict:'client_id,section'});
+  data.icp=nd;
+  openEdit('icp');
+}
+
+// ── DELETE WORKSPACE ───────────────────────────────────────
+async function deleteWorkspace(cid,name){
+  if(!confirm('Delete '+name+' workspace? This permanently removes all their data. Their login account will still exist in Supabase Auth but the workspace will be gone.'))return;
+  await sb.from('client_data').delete().eq('client_id',cid);
+  await sb.from('clients').delete().eq('id',cid);
+  isAdminView=false;
+  client={company_name:'Admin View',status:'live'};
+  data={};viewId=null;
+  renderChrome();
+  nav('admin',document.getElementById('n-admin'));
+}
+
+// ── UPDATE CLIENT STATUS ───────────────────────────────────
+async function updateStatus(cid,newStatus){
+  await sb.from('clients').update({status:newStatus}).eq('id',cid);
+  if(client)client.status=newStatus;
+  renderChrome();
+  nav('db',document.getElementById('n-db'));
+}
+
 </script>
 </body>
 </html>
