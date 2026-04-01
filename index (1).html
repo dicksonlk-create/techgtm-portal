@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>TechGTM Systems — Client Portal</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -142,9 +142,9 @@ a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
-
+ 
 <div id="loading"><div class="spinner"></div>Loading your portal...</div>
-
+ 
 <div class="login-wrap" id="login-wrap">
   <div class="login-card">
     <div class="login-brand">
@@ -168,7 +168,7 @@ a:hover{text-decoration:underline}
     <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in</button>
   </div>
 </div>
-
+ 
 <div class="portal" id="portal">
   <div class="sidebar">
     <div class="sb-head">
@@ -209,21 +209,21 @@ a:hover{text-decoration:underline}
     <div class="content" id="content"></div>
   </div>
 </div>
-
+ 
 <script>
 const SUPABASE_URL = 'https://gidimjerpzkodfhqgkkc.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Lf7IpRusxCIBMJxqIO3uOQ_KNJG2yHy';
-
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpZGltamVycHprb2RmaHFna2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjQ0NzAsImV4cCI6MjA5MDY0MDQ3MH0.ons8w_az8qQlkme11trqGdgqKKB1XBI54uaiAZD_B4c';
+ 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+ 
 let me=null,profile=null,client=null,data={},viewingClientId=null;
-
+ 
 const SECTION_TITLES={
   dashboard:'Dashboard',notes:'Call Notes',copy:'Copywriting',
   segments:'Campaign Hypothesis',logins:'Login Sheet',
   domains:'Domains & Data',icp:'CRM Mining & ICP',admin:'All Clients'
 };
-
+ 
 async function doLogin(){
   const email=document.getElementById('inp-email').value.trim();
   const pass=document.getElementById('inp-pass').value;
@@ -246,14 +246,14 @@ async function doLogout(){
 }
 document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('inp-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-pass').focus();});
-
+ 
 async function init(){
   const {data:{session}}=await sb.auth.getSession();
   document.getElementById('loading').style.display='none';
   if(session?.user) await boot(session.user);
   else document.getElementById('login-wrap').style.display='flex';
 }
-
+ 
 async function boot(user){
   me=user;
   const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
@@ -270,7 +270,7 @@ async function boot(user){
   document.getElementById('portal').style.display='flex';
   nav(p.is_admin?'admin':'dashboard',document.getElementById(p.is_admin?'nav-admin':'nav-dashboard'));
 }
-
+ 
 async function loadClient(clientId){
   const {data:c}=await sb.from('clients').select('*').eq('id',clientId).single();
   client=c;viewingClientId=clientId;
@@ -278,12 +278,12 @@ async function loadClient(clientId){
   data={};
   if(rows) rows.forEach(r=>data[r.section]=r.data);
 }
-
+ 
 async function loadAdmin(){
   client={company_name:'Admin View',status:'live'};
   viewingClientId=null;
 }
-
+ 
 function renderChrome(){
   const n=client?.company_name||client?.name||'Client';
   document.getElementById('sb-name').textContent=n;
@@ -300,14 +300,14 @@ function renderChrome(){
   const launch=client?.launch_date?new Date(client.launch_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
   document.getElementById('tb-meta').textContent=`Started ${start} · Launch Day ${launch}`;
 }
-
+ 
 function nav(section,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
   document.getElementById('tb-title').textContent=SECTION_TITLES[section]||section;
   renderSection(section);
 }
-
+ 
 function renderSection(id){
   const el=document.getElementById('content');
   if(id==='dashboard') el.innerHTML=renderDashboard();
@@ -319,7 +319,7 @@ function renderSection(id){
   else if(id==='icp') el.innerHTML=renderICP();
   else if(id==='admin') renderAdminSection();
 }
-
+ 
 function renderDashboard(){
   const kpis=data.kpis||{};
   const tl=(data.timeline||{}).items||[];
@@ -361,7 +361,7 @@ function renderDashboard(){
       </div>
     </div>`:''}`;
 }
-
+ 
 function renderNotes(){
   const calls=(data.notes||{}).calls||[];
   if(!calls.length) return `<div class="card"><div class="empty">Call notes will appear here after your first call.</div></div>`;
@@ -379,7 +379,7 @@ function renderNotes(){
       </div>
     </div>`).join('');
 }
-
+ 
 function renderCopy(){
   const tiers=(data.copy||{}).tiers||[];
   const alrt=(data.copy||{}).alert||null;
@@ -398,7 +398,7 @@ function renderCopy(){
         ${(t.sequences||[]).map(s=>`<div class="seq-row"><span class="ss ${sc(s.status)}">${s.status||'Draft'}</span>${s.name}</div>`).join('')}
       </div>`).join('')}`;
 }
-
+ 
 function renderSegments(){
   const items=(data.segments||{}).items||[];
   if(!items.length) return `<div class="card"><div class="empty">Segment hypotheses will be added after your onboarding call.</div></div>`;
@@ -412,7 +412,7 @@ function renderSegments(){
       <div class="seg-desc">${s.description}</div>
     </div>`).join('');
 }
-
+ 
 function renderLogins(){
   const tools=(data.logins||{}).tools||[];
   if(!tools.length) return `<div class="card"><div class="empty">Login credentials will be added here as your workspace is set up.</div></div>`;
@@ -423,7 +423,7 @@ function renderLogins(){
       ${t.url?`<a class="tool-link" href="${t.url}" target="_blank">Open ›</a>`:''}
     </div>`).join('')}</div>`;
 }
-
+ 
 function renderDomains(){
   const domains=(data.domains||{}).items||[];
   const files=(data.domains||{}).files||[];
@@ -446,7 +446,7 @@ function renderDomains(){
         ${f.url?`<a class="tool-link" href="${f.url}" target="_blank">Download ›</a>`:''}
       </div>`).join('')}</div>`:''}`;
 }
-
+ 
 function renderICP(){
   const icp=data.icp||{};
   const attrs=icp.profile||[];
@@ -464,7 +464,7 @@ function renderICP(){
       ${quotes.map(q=>`<div class="voc-q">"${q}"</div>`).join('')}
     </div>`:''}`;
 }
-
+ 
 let allClients=[];
 async function renderAdminSection(){
   const el=document.getElementById('content');
@@ -485,18 +485,18 @@ async function renderAdminSection(){
       </div>`).join('')}
     </div>`;
 }
-
+ 
 async function adminViewClient(clientId){
   await loadClient(clientId);
   renderChrome();
   const el=document.getElementById('content');
   el.innerHTML=`<div class="admin-back" onclick="backToAdmin()">← Back to all clients</div>`+renderDashboard();
 }
-
+ 
 function backToAdmin(){
   loadAdmin().then(()=>{renderChrome();nav('admin',document.getElementById('nav-admin'));});
 }
-
+ 
 init();
 </script>
 </body>
