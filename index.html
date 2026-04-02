@@ -319,7 +319,14 @@ function renderDB(){
   if(tl.length){tl.forEach(function(t){h+='<div class="tlr"><div class="tld '+(t.status==='done'?'tdn':t.status==='current'?'tcu':'tup')+'"></div><div class="tll">'+t.label+'</div><div class="tla">'+(t.date||'')+'</div><span class="tlb '+(t.status==='done'?'bdn':t.status==='current'?'bcu':'bup')+'">'+(t.status==='done'?'Done':t.status==='current'?'In progress':t.date||'Upcoming')+'</span></div>';});}
   else h+='<div class="empty">Timeline will appear here.</div>';
   h+='</div>';
-  if(acts.length){h+='<div class="card"><div class="ct">Your action items</div><div class="al">';acts.forEach(function(a){h+='<div class="ar"><div class="ab'+(a.done?' done':'')+'">'+(a.done?'&#10003;':'')+'</div><span>'+a.label+'</span></div>';});h+='</div></div>';}
+  if(acts.length){
+    var actBtn=isAdminView?'<button onclick="openEdit(\'actions\')" class="ebtn" style="font-size:11px;padding:5px 12px;margin-left:8px">Edit</button>':'';
+    h+='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span class="ct" style="margin-bottom:0">Your action items</span>'+actBtn+'</div><div class="al">';
+    acts.forEach(function(a,i){
+      h+='<div class="ar" style="cursor:pointer" onclick="toggleAction('+i+')"><div class="ab'+(a.done?' done':'')+'">'+(a.done?'&#10003;':'')+'</div><span style="'+(a.done?'text-decoration:line-through;color:var(--light)':'')+'">'+(a.label||'')+'</span></div>';
+    });
+    h+='</div></div>';
+  }
   return h;
 }
 function showEditKPIs(){
@@ -456,6 +463,53 @@ async function adminView(cid){
   el.innerHTML=topBar+renderDB();
 }
 
+// ── ACTION ITEMS ──────────────────────────────────────────────
+async function toggleAction(idx){
+  var acts=(data.actions&&data.actions.items)||[];
+  if(!acts[idx])return;
+  acts[idx].done=!acts[idx].done;
+  var nd={items:acts};
+  var cid=viewId||prof.client_id;
+  await sb.from('client_data').upsert({client_id:cid,section:'actions',data:nd},{onConflict:'client_id,section'});
+  data.actions=nd;
+  nav('db',document.getElementById('n-db'));
+}
+function editActionsForm(){
+  var acts=(data.actions&&data.actions.items)||[];
+  var h='<div class="oh">Action Items</div><div class="os">Add or remove items from the client checklist.</div>';
+  h+='<div class="fg full" style="margin-bottom:14px"><div><label class="fl">New action item</label><input class="fn" id="act-new" placeholder="Review Tier 1 copy when shared for approval"></div></div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:20px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveAction()">Add Item</button></div>';
+  if(acts.length){
+    h+='<div style="border-top:1px solid var(--border);padding-top:14px"><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Current Items</div>';
+    acts.forEach(function(a,i){
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg)">';
+      h+='<span style="font-size:13px;'+(a.done?'text-decoration:line-through;color:var(--light)':'')+'">'+(a.label||'')+'</span>';
+      h+='<div style="display:flex;gap:8px;align-items:center"><span style="font-size:11px;color:var(--muted)">'+(a.done?'Done':'Pending')+'</span>';
+      h+='<button onclick="deleteAction('+i+')" class="del-btn">Delete</button></div></div>';
+    });
+    h+='</div>';
+  }
+  return h;
+}
+async function saveAction(){
+  var acts=(data.actions&&data.actions.items)||[];
+  var val=document.getElementById('act-new').value.trim();
+  if(!val)return;
+  acts.push({label:val,done:false});
+  var nd={items:acts};
+  await sb.from('client_data').upsert({client_id:viewId,section:'actions',data:nd},{onConflict:'client_id,section'});
+  data.actions=nd;
+  openEdit('actions');
+}
+async function deleteAction(idx){
+  var acts=(data.actions&&data.actions.items)||[];
+  acts.splice(idx,1);
+  var nd={items:acts};
+  await sb.from('client_data').upsert({client_id:viewId,section:'actions',data:nd},{onConflict:'client_id,section'});
+  data.actions=nd;
+  openEdit('actions');
+}
+
 function backToAdmin(){isAdminView=false;client={company_name:'Admin View',status:'live'};data={};viewId=null;renderChrome();nav('admin',document.getElementById('n-admin'));}
 function openSetup(){
   document.getElementById('ferr').style.display='none';
@@ -554,6 +608,7 @@ function openEdit(sec){
   else if(sec==='login') oc.innerHTML=editLoginForm();
   else if(sec==='dom') oc.innerHTML=editDomForm();
   else if(sec==='icp') oc.innerHTML=editICPForm();
+  else if(sec==='actions') oc.innerHTML=editActionsForm();
   document.getElementById('overlay').style.display='flex';
 }
 
