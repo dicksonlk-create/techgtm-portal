@@ -383,34 +383,59 @@ function renderCopy(){
   var statColors={draft:'sd',review:'sv',approved:'sa',live:'sl'};
   return hdr+camps.map(function(camp,ci){
     var delBtn=isAdminView?'<button onclick="deleteCamp('+ci+')" class="del-btn" style="margin-left:8px">Delete</button>':'';
-    var addEmailBtn=isAdminView?'<button onclick="addEmail('+ci+')" style="font-size:11px;color:var(--info);background:none;border:none;cursor:pointer;padding:2px 0">+ Add Email</button>':'';
+    var addEmailBtn=isAdminView?'<button onclick="addEmail('+ci+')" style="font-size:11px;color:var(--info);background:none;border:none;cursor:pointer;padding:4px 0">+ Add Email</button>':'';
     var dataLink=camp.data_url?'<a href="'+camp.data_url+'" target="_blank" style="font-size:11px;color:var(--info);margin-left:10px">Data / CSV ›</a>':'';
+    var editStratBtn=isAdminView?'<button onclick="openEditStrategy('+ci+')" style="font-size:11px;color:var(--info);background:none;border:none;cursor:pointer;margin-left:8px">Edit strategy</button>':'';
     var h='<div class="card" style="margin-bottom:16px">';
-    h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">';
+    // Campaign header
+    h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">';
     h+='<div><div style="font-size:14px;font-weight:600">'+camp.name+dataLink+'</div>';
     if(camp.icp)h+='<div style="font-size:12px;color:var(--muted);margin-top:2px">Target: '+camp.icp+'</div>';
-    h+='</div><div style="display:flex;align-items:center">'+delBtn+'</div></div>';
-    h+='<div style="border-top:1px solid var(--bg);margin:10px 0"></div>';
+    h+='</div><div>'+delBtn+'</div></div>';
+    // Strategy block
+    if(camp.strategy&&(camp.strategy.offer||camp.strategy.cta||camp.strategy.hypothesis)){
+      h+='<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px">';
+      if(camp.strategy.offer)h+='<div style="margin-bottom:6px"><span style="font-weight:600;color:var(--text)">Offer: </span><span style="color:#374151">'+camp.strategy.offer+'</span></div>';
+      if(camp.strategy.cta)h+='<div style="margin-bottom:6px"><span style="font-weight:600;color:var(--text)">CTA: </span><span style="color:#374151">'+camp.strategy.cta+'</span></div>';
+      if(camp.strategy.hypothesis)h+='<div><span style="font-weight:600;color:var(--text)">Hypothesis: </span><span style="color:#374151">'+camp.strategy.hypothesis+'</span></div>';
+      h+='</div>';
+    } else if(isAdminView){
+      h+='<div style="font-size:12px;color:var(--light);margin-bottom:10px">No strategy added yet.'+editStratBtn+'</div>';
+    }
+    if((camp.strategy&&(camp.strategy.offer||camp.strategy.cta||camp.strategy.hypothesis))&&isAdminView){
+      h+='<div style="margin-bottom:10px">'+editStratBtn+'</div>';
+    }
+    h+='<div style="border-top:1px solid var(--bg);margin-bottom:10px"></div>';
+    // Emails
     (camp.emails||[]).forEach(function(email,ei){
       var addVarBtn=isAdminView?'<button onclick="addVariant('+ci+','+ei+')" style="font-size:11px;color:var(--info);background:none;border:none;cursor:pointer">+ Variant</button>':'';
-      var delEmailBtn=isAdminView?'<button onclick="deleteEmail('+ci+','+ei+')" class="del-btn">Delete</button>':'';
-      h+='<div style="margin-bottom:12px">';
+      var delEmailBtn=isAdminView?'<button onclick="deleteEmail('+ci+','+ei+')" class="del-btn">Delete email</button>':'';
+      h+='<div style="margin-bottom:14px">';
       h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
       h+='<span style="font-size:12px;font-weight:600;color:var(--text)">'+email.name+'</span>';
       h+='<div style="display:flex;gap:8px;align-items:center">'+addVarBtn+delEmailBtn+'</div></div>';
       (email.variants||[]).forEach(function(v,vi){
         var sc=statColors[(v.status||'draft').toLowerCase()]||'sd';
         var delVarBtn=isAdminView?'<button onclick="deleteVariant('+ci+','+ei+','+vi+')" class="del-btn">×</button>':'';
-        var statSel=isAdminView?'<select class="stat-sel" style="font-size:10px;padding:1px 5px" onchange="updateVariantStatus('+ci+','+ei+','+vi+',this.value)"><option value="Draft"'+(v.status==='Draft'?' selected':'')+'>Draft</option><option value="Review"'+(v.status==='Review'?' selected':'')+'>Review</option><option value="Approved"'+(v.status==='Approved'?' selected':'')+'>Approved</option><option value="Live"'+(v.status==='Live'?' selected':'')+'>Live</option></select>':'<span class="ss '+sc+'">'+(v.status||'Draft')+'</span>';
-        h+='<div style="display:flex;align-items:center;gap:8px;padding:4px 0 4px 12px;border-bottom:1px solid var(--bg)">';
+        var statSel=isAdminView
+          ?'<select class="stat-sel" style="font-size:10px;padding:1px 5px" onchange="updateVariantStatus('+ci+','+ei+','+vi+',this.value)"><option value="Draft"'+(v.status==='Draft'?' selected':'')+'>Draft</option><option value="Review"'+(v.status==='Review'?' selected':'')+'>Review</option><option value="Approved"'+(v.status==='Approved'?' selected':'')+'>Approved</option><option value="Live"'+(v.status==='Live'?' selected':'')+'>Live</option></select>'
+          :'<span class="ss '+sc+'">'+(v.status||'Draft')+'</span>';
+        var editCopyBtn=isAdminView?'<button onclick="openEditVariant('+ci+','+ei+','+vi+')" style="font-size:11px;color:var(--info);background:none;border:none;cursor:pointer">Edit copy</button>':'';
+        h+='<div style="border:1px solid var(--bg);border-radius:7px;padding:8px 10px;margin-bottom:6px">';
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:'+(v.subject||v.body?'8':'0')+'px">';
         h+='<span style="font-size:12px;color:var(--muted);flex:1">'+v.name+'</span>';
-        h+=statSel+delVarBtn+'</div>';
+        h+=editCopyBtn+statSel+delVarBtn+'</div>';
+        if(v.subject)h+='<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:3px">Subject: <span style="font-weight:400">'+v.subject+'</span></div>';
+        if(v.body)h+='<div style="font-size:11px;color:#374151;white-space:pre-wrap;line-height:1.5;max-height:80px;overflow:hidden;border-top:1px solid var(--bg);padding-top:5px;margin-top:3px">'+v.body.substring(0,200)+(v.body.length>200?'...':'')+'</div>';
+        h+='</div>';
       });
+      h+='</div>';
     });
     h+=addEmailBtn+'</div>';
     return h;
   }).join('');
 }
+
 function sc(s){if(!s)return'sd';var m={draft:'sd',review:'sv',approved:'sa',live:'sl'};return m[s.toLowerCase()]||'sd';}
 
 function renderSegs(){
@@ -535,6 +560,58 @@ async function deleteAction(idx){
   await sb.from('client_data').upsert({client_id:viewId,section:'actions',data:nd},{onConflict:'client_id,section'});
   data.actions=nd;
   openEdit('actions');
+}
+
+// ── STRATEGY EDIT ──────────────────────────────────────────
+var _editCampIdx=null;
+function openEditStrategy(ci){
+  _editCampIdx=ci;
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  var camp=camps[ci]||{};
+  var s=camp.strategy||{};
+  var h='<div class="oh">Campaign Strategy</div><div class="os">Describe the offer, call to action, and your hypothesis for this campaign.</div>';
+  h+='<div class="fg full"><div><label class="fl">Offer</label><input class="fn" id="st-offer" value="'+(s.offer||'')+'" placeholder="What are we offering? e.g. Free audit, demo, case study..."></div></div>';
+  h+='<div class="fg full"><div><label class="fl">Call to action</label><input class="fn" id="st-cta" value="'+(s.cta||'')+'" placeholder="e.g. Book a 15-min call, reply yes to learn more..."></div></div>';
+  h+='<div class="fg full" style="margin-bottom:20px"><div><label class="fl">Hypothesis</label><textarea class="fn" id="st-hyp" rows="4" placeholder="Why do we think this campaign will work? What signal are we targeting? What pain are we addressing?">'+(s.hypothesis||'')+'</textarea></div></div>';
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveStrategy()">Save</button></div>';
+  document.getElementById('ocard').innerHTML=h;
+  document.getElementById('overlay').style.display='flex';
+}
+async function saveStrategy(){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  if(!camps[_editCampIdx])return;
+  camps[_editCampIdx].strategy={
+    offer:document.getElementById('st-offer').value,
+    cta:document.getElementById('st-cta').value,
+    hypothesis:document.getElementById('st-hyp').value
+  };
+  await saveCopyData(camps);
+  closeSetup();
+  nav('copy',document.getElementById('n-copy'));
+}
+
+// ── VARIANT COPY EDIT ──────────────────────────────────────
+var _vci=null,_vei=null,_vvi=null;
+function openEditVariant(ci,ei,vi){
+  _vci=ci;_vei=ei;_vvi=vi;
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  var v=(camps[ci]&&camps[ci].emails&&camps[ci].emails[ei]&&camps[ci].emails[ei].variants&&camps[ci].emails[ei].variants[vi])||{};
+  var emailName=(camps[ci]&&camps[ci].emails&&camps[ci].emails[ei]&&camps[ci].emails[ei].name)||'Email';
+  var h='<div class="oh">'+emailName+' — '+v.name+'</div><div class="os">Write or paste the copy for this variant. Subject line and body.</div>';
+  h+='<div class="fg full"><div><label class="fl">Subject line</label><input class="fn" id="var-subj" value="'+(v.subject||'')+'" placeholder="e.g. Quick question about {{company}}"></div></div>';
+  h+='<div class="fg full" style="margin-bottom:20px"><div><label class="fl">Email body</label><textarea class="fn" id="var-body" rows="10" placeholder="Write or paste the full email body here...">'+(v.body||'')+'</textarea></div></div>';
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveVariantCopy()">Save</button></div>';
+  document.getElementById('ocard').innerHTML=h;
+  document.getElementById('overlay').style.display='flex';
+}
+async function saveVariantCopy(){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  if(!camps[_vci]||!camps[_vci].emails||!camps[_vci].emails[_vei]||!camps[_vci].emails[_vei].variants[_vvi])return;
+  camps[_vci].emails[_vei].variants[_vvi].subject=document.getElementById('var-subj').value;
+  camps[_vci].emails[_vei].variants[_vvi].body=document.getElementById('var-body').value;
+  await saveCopyData(camps);
+  closeSetup();
+  nav('copy',document.getElementById('n-copy'));
 }
 
 function backToAdmin(){isAdminView=false;client={company_name:'Admin View',status:'live'};data={};viewId=null;renderChrome();nav('admin',document.getElementById('n-admin'));}
