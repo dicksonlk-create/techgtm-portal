@@ -194,7 +194,6 @@ a{color:var(--info);text-decoration:none}a:hover{text-decoration:underline}
       <div class="nl">Campaign</div>
       <div class="ni" id="n-notes" onclick="nav('notes',this)"><span class="ico">📋</span>Call Notes</div>
       <div class="ni" id="n-copy" onclick="nav('copy',this)"><span class="ico">✏️</span>Copywriting</div>
-      <div class="ni" id="n-segs" onclick="nav('segs',this)"><span class="ico">🎯</span>Campaign Hypothesis</div>
       <div class="nl">Resources</div>
       <div class="ni" id="n-login" onclick="nav('login',this)"><span class="ico">🔑</span>Login Sheet</div>
       <div class="ni" id="n-dom" onclick="nav('dom',this)"><span class="ico">📁</span>Domains & Data</div>
@@ -222,7 +221,7 @@ a{color:var(--info);text-decoration:none}a:hover{text-decoration:underline}
 var SU='https://gidimjerpzkodfhqgkkc.supabase.co';
 var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpZGltamVycHprb2RmaHFna2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjQ0NzAsImV4cCI6MjA5MDY0MDQ3MH0.ons8w_az8qQlkme11trqGdgqKKB1XBI54uaiAZD_B4c';
 var sb,me=null,prof=null,client=null,data={},viewId=null,isAdminView=false;
-var TITLES={db:'Dashboard',notes:'Call Notes',copy:'Copywriting',segs:'Campaign Hypothesis',login:'Login Sheet',dom:'Domains & Data',icp:'CRM Mining & ICP',admin:'All Clients'};
+var TITLES={db:'Dashboard',notes:'Call Notes',copy:'Copywriting',login:'Login Sheet',dom:'Domains & Data',icp:'CRM Mining & ICP',admin:'All Clients'};
 window.addEventListener('load',function(){sb=window.supabase.createClient(SU,SK);init();});
 function showErr(m){var e=document.getElementById('lerr');e.textContent=m;e.style.display='block';}
 async function doLogin(){
@@ -278,7 +277,6 @@ function renderSec(id){
   if(id==='db')el.innerHTML=renderDB();
   else if(id==='notes')el.innerHTML=renderNotes();
   else if(id==='copy')el.innerHTML=renderCopy();
-  else if(id==='segs')el.innerHTML=renderSegs();
   else if(id==='login')el.innerHTML=renderLogin();
   else if(id==='dom')el.innerHTML=renderDom();
   else if(id==='icp')el.innerHTML=renderICP();
