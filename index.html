@@ -376,16 +376,43 @@ function renderNotes(){
 
 function sc(s){if(!s)return'sd';var m={draft:'sd',review:'sv',approved:'sa',live:'sl'};return m[s.toLowerCase()]||'sd';}
 function renderCopy(){
-  var tiers=(data.copy&&data.copy.tiers)||[];
-  var alrt=data.copy&&data.copy.alert;
-  if(!tiers.length)return'<div class="card"><div class="empty">Copywriting is being built. Sequences will appear here for your review before launch.</div></div>';
-  var h=alrt?'<div class="alert aw"><div class="atx">'+alrt.title+'</div>'+alrt.body+'</div>':'';
-  h+='<div class="tg">';
-  tiers.slice(0,2).forEach(function(t){h+='<div class="tb"><div class="tt"><span class="tn">'+t.name+'</span><span class="ss '+(sc(t.status))+'">'+(t.status||'Draft')+'</span></div>'+((t.sequences||[]).map(function(s){return'<div class="sr"><span class="ss '+(sc(s.status))+'">'+(s.status||'Draft')+'</span>'+s.name+'</div>';}).join(''))+'</div>';});
-  h+='</div>';
-  tiers.slice(2).forEach(function(t){h+='<div class="card"><div class="ct">'+t.name+'</div>'+((t.sequences||[]).map(function(s){return'<div class="sr"><span class="ss '+(sc(s.status))+'">'+(s.status||'Draft')+'</span>'+s.name+'</div>';}).join(''))+'</div>';});
-  return h;
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  var editBtn=isAdminView?'<button onclick="openEdit(\'copy\')" class="ebtn" style="font-size:11px;padding:5px 12px">+ Add Campaign</button>':'';
+  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font-size:14px;font-weight:600">Copywriting</span>'+editBtn+'</div>';
+  if(!camps.length)return hdr+'<div class="card"><div class="empty">Campaigns will appear here as they are built out before launch.</div></div>';
+  var statColors={draft:'sd',review:'sv',approved:'sa',live:'sl'};
+  return hdr+camps.map(function(camp,ci){
+    var delBtn=isAdminView?'<button onclick="deleteCamp('+ci+')" class="del-btn" style="margin-left:8px">Delete</button>':'';
+    var addEmailBtn=isAdminView?'<button onclick="addEmail('+ci+')" style="font-size:11px;color:var(--info);background:none;border:none;cursor:pointer;padding:2px 0">+ Add Email</button>':'';
+    var dataLink=camp.data_url?'<a href="'+camp.data_url+'" target="_blank" style="font-size:11px;color:var(--info);margin-left:10px">Data / CSV ›</a>':'';
+    var h='<div class="card" style="margin-bottom:16px">';
+    h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">';
+    h+='<div><div style="font-size:14px;font-weight:600">'+camp.name+dataLink+'</div>';
+    if(camp.icp)h+='<div style="font-size:12px;color:var(--muted);margin-top:2px">Target: '+camp.icp+'</div>';
+    h+='</div><div style="display:flex;align-items:center">'+delBtn+'</div></div>';
+    h+='<div style="border-top:1px solid var(--bg);margin:10px 0"></div>';
+    (camp.emails||[]).forEach(function(email,ei){
+      var addVarBtn=isAdminView?'<button onclick="addVariant('+ci+','+ei+')" style="font-size:11px;color:var(--info);background:none;border:none;cursor:pointer">+ Variant</button>':'';
+      var delEmailBtn=isAdminView?'<button onclick="deleteEmail('+ci+','+ei+')" class="del-btn">Delete</button>':'';
+      h+='<div style="margin-bottom:12px">';
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
+      h+='<span style="font-size:12px;font-weight:600;color:var(--text)">'+email.name+'</span>';
+      h+='<div style="display:flex;gap:8px;align-items:center">'+addVarBtn+delEmailBtn+'</div></div>';
+      (email.variants||[]).forEach(function(v,vi){
+        var sc=statColors[(v.status||'draft').toLowerCase()]||'sd';
+        var delVarBtn=isAdminView?'<button onclick="deleteVariant('+ci+','+ei+','+vi+')" class="del-btn">×</button>':'';
+        var statSel=isAdminView?'<select class="stat-sel" style="font-size:10px;padding:1px 5px" onchange="updateVariantStatus('+ci+','+ei+','+vi+',this.value)"><option value="Draft"'+(v.status==='Draft'?' selected':'')+'>Draft</option><option value="Review"'+(v.status==='Review'?' selected':'')+'>Review</option><option value="Approved"'+(v.status==='Approved'?' selected':'')+'>Approved</option><option value="Live"'+(v.status==='Live'?' selected':'')+'>Live</option></select>':'<span class="ss '+sc+'">'+(v.status||'Draft')+'</span>';
+        h+='<div style="display:flex;align-items:center;gap:8px;padding:4px 0 4px 12px;border-bottom:1px solid var(--bg)">';
+        h+='<span style="font-size:12px;color:var(--muted);flex:1">'+v.name+'</span>';
+        h+=statSel+delVarBtn+'</div>';
+      });
+    });
+    h+=addEmailBtn+'</div>';
+    return h;
+  }).join('');
 }
+function sc(s){if(!s)return'sd';var m={draft:'sd',review:'sv',approved:'sa',live:'sl'};return m[s.toLowerCase()]||'sd';}
+
 function renderSegs(){
   var items=(data.segments&&data.segments.items)||[];
   var editBtn=isAdminView?'<button onclick="openEdit(\'segs\')" class="ebtn" style="font-size:11px;padding:5px 12px">Edit</button>':'';
@@ -696,40 +723,80 @@ async function saveTimeline(){
 }
 
 // ── COPYWRITING ────────────────────────────────────────────
-var cpEdits={};
 function editCopyForm(){
-  var tiers=(data.copy&&data.copy.tiers)||[];
-  cpEdits={};
-  var statuses=['Draft','Review','Approved','Live'];
-  var h='<div class="oh">Edit Copywriting Status</div><div class="os">Update sequence statuses as they progress.</div>';
-  tiers.forEach(function(tier,ti){
-    h+='<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin:14px 0 6px">'+tier.name+'</div>';
-    (tier.sequences||[]).forEach(function(seq,si){
-      var key=ti+'-'+si;
-      var sel='<select class="stat-sel" data-key="'+key+'" data-ti="'+ti+'" data-si="'+si+'" onchange="cpEdits[this.dataset.key]={ti:parseInt(this.dataset.ti),si:parseInt(this.dataset.si),val:this.value}">';
-      statuses.forEach(function(st){
-        sel+='<option value="'+st+'"'+(seq.status===st?' selected':'')+'>'+st+'</option>';
-      });
-      sel+='</select>';
-      h+='<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bg)">';
-      h+='<div style="flex:1;font-size:13px">'+seq.name+'</div>'+sel+'</div>';
-    });
-  });
-  h+='<div style="margin-top:16px;display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveCopy()">Save</button></div>';
+  var h='<div class="oh">Add Campaign</div><div class="os">Add a new campaign. You can add emails and variants after creating it.</div>';
+  h+='<div class="fg full"><div><label class="fl">Campaign name</label><input class="fn" id="cp-name" placeholder="Fintech VP Sales — Missed Q Angle"></div></div>';
+  h+='<div class="fg full"><div><label class="fl">ICP / Target audience</label><input class="fn" id="cp-icp" placeholder="VP Sales · Fintech · Series B-C · 100-300 employees"></div></div>';
+  h+='<div class="fg full" style="margin-bottom:20px"><div><label class="fl">Data / CSV link (optional)</label><input class="fn" id="cp-data" placeholder="https://docs.google.com/spreadsheets/..."></div></div>';
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveCamp()">Create Campaign</button></div>';
   return h;
 }
-async function saveCopy(){
-  var tiers=(data.copy&&data.copy.tiers)||[];
-  Object.keys(cpEdits).forEach(function(k){
-    var e=cpEdits[k];
-    if(tiers[e.ti]&&tiers[e.ti].sequences[e.si])tiers[e.ti].sequences[e.si].status=e.val;
+async function saveCamp(){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  camps.push({
+    name:document.getElementById('cp-name').value||'New Campaign',
+    icp:document.getElementById('cp-icp').value||'',
+    data_url:document.getElementById('cp-data').value||'',
+    emails:[
+      {name:'Email 1',variants:[{name:'Variant A',status:'Draft'}]},
+      {name:'Email 2',variants:[{name:'Variant A',status:'Draft'}]},
+      {name:'Email 3',variants:[{name:'Variant A',status:'Draft'}]},
+      {name:'Email 4',variants:[{name:'Variant A',status:'Draft'}]}
+    ]
   });
-  cpEdits={};
-  var nd={tiers:tiers,alert:data.copy?data.copy.alert:null};
-  await sb.from('client_data').upsert({client_id:viewId,section:'copy',data:nd},{onConflict:'client_id,section'});
-  data.copy=nd;
+  await saveCopyData(camps);
   closeSetup();
   nav('copy',document.getElementById('n-copy'));
+}
+async function deleteCamp(ci){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  camps.splice(ci,1);
+  await saveCopyData(camps);
+  nav('copy',document.getElementById('n-copy'));
+}
+async function addEmail(ci){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  if(!camps[ci])return;
+  var n=camps[ci].emails?camps[ci].emails.length+1:1;
+  camps[ci].emails=camps[ci].emails||[];
+  camps[ci].emails.push({name:'Email '+n,variants:[{name:'Variant A',status:'Draft'}]});
+  await saveCopyData(camps);
+  nav('copy',document.getElementById('n-copy'));
+}
+async function deleteEmail(ci,ei){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  if(!camps[ci]||!camps[ci].emails)return;
+  camps[ci].emails.splice(ei,1);
+  await saveCopyData(camps);
+  nav('copy',document.getElementById('n-copy'));
+}
+async function addVariant(ci,ei){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  if(!camps[ci]||!camps[ci].emails||!camps[ci].emails[ei])return;
+  var letters=['A','B','C','D','E','F'];
+  var n=camps[ci].emails[ei].variants?camps[ci].emails[ei].variants.length:0;
+  camps[ci].emails[ei].variants=camps[ci].emails[ei].variants||[];
+  camps[ci].emails[ei].variants.push({name:'Variant '+(letters[n]||n+1),status:'Draft'});
+  await saveCopyData(camps);
+  nav('copy',document.getElementById('n-copy'));
+}
+async function deleteVariant(ci,ei,vi){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  if(!camps[ci]||!camps[ci].emails||!camps[ci].emails[ei])return;
+  camps[ci].emails[ei].variants.splice(vi,1);
+  await saveCopyData(camps);
+  nav('copy',document.getElementById('n-copy'));
+}
+async function updateVariantStatus(ci,ei,vi,status){
+  var camps=(data.copy&&data.copy.campaigns)||[];
+  if(!camps[ci]||!camps[ci].emails||!camps[ci].emails[ei]||!camps[ci].emails[ei].variants[vi])return;
+  camps[ci].emails[ei].variants[vi].status=status;
+  await saveCopyData(camps);
+}
+async function saveCopyData(camps){
+  var nd={campaigns:camps};
+  await sb.from('client_data').upsert({client_id:viewId,section:'copy',data:nd},{onConflict:'client_id,section'});
+  data.copy=nd;
 }
 
 // ── SEGMENTS ───────────────────────────────────────────────
