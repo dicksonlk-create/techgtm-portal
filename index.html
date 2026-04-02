@@ -943,12 +943,24 @@ async function saveLogins(){
 // ── DOMAINS ────────────────────────────────────────────────
 function editDomForm(){
   var doms=(data.domains&&data.domains.items)||[];
-  var h='<div class="oh">Domains & Data</div><div class="os">Add a sending domain and its warmup progress.</div>';
+  var h='<div class="oh">Domains & Data</div><div class="os">Add one domain or paste a bulk list — one domain per line.</div>';
+  h+='<div style="margin-bottom:10px;display:flex;gap:8px;border-bottom:1px solid var(--border);padding-bottom:12px">';
+  h+='<button id="tab-single" onclick="domTab(\'single\')" class="fbtn" style="font-size:12px;padding:6px 14px">Single</button>';
+  h+='<button id="tab-bulk" onclick="domTab(\'bulk\')" class="fbtn sec" style="font-size:12px;padding:6px 14px">Bulk import</button></div>';
+  h+='<div id="dom-single">';
   h+='<div class="fg"><div><label class="fl">Domain name</label><input class="fn" id="dm-name" placeholder="getacmesales.com"></div>';
   h+='<div><label class="fl">Warmup day</label><input class="fn" id="dm-day" type="number" placeholder="1" min="1" max="14"></div></div>';
   h+='<div class="fg" style="margin-bottom:16px"><div><label class="fl">Warmup % (0-100)</label><input class="fn" id="dm-pct" type="number" placeholder="21" min="0" max="100"></div>';
   h+='<div><label class="fl">Status note</label><input class="fn" id="dm-sub" placeholder="DNS configured · Parking page live"></div></div>';
   h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveDomain()">Add Domain</button></div>';
+  h+='</div>';
+  h+='<div id="dom-bulk" style="display:none">';
+  h+='<div class="fg full"><div><label class="fl">Paste domains — one per line</label>';
+  h+='<textarea class="fn" id="dm-bulk" rows="8" placeholder="getacmesales.com&#10;acmesalesteam.com&#10;tryacme.io&#10;heyacme.com&#10;acme-hq.com"></textarea></div></div>';
+  h+='<div class="fg" style="margin-bottom:16px"><div><label class="fl">Warmup day (applies to all)</label><input class="fn" id="dm-bulk-day" type="number" placeholder="1" min="1" max="14"></div>';
+  h+='<div><label class="fl">Warmup % (applies to all)</label><input class="fn" id="dm-bulk-pct" type="number" placeholder="0" min="0" max="100"></div></div>';
+  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveBulkDomains()">Import All</button></div>';
+  h+='</div>';
   if(doms.length){
     h+='<div style="border-top:1px solid var(--border);padding-top:16px;margin-top:20px">';
     h+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Existing Domains</div>';
@@ -960,6 +972,28 @@ function editDomForm(){
     h+='</div>';
   }
   return h;
+}
+function domTab(tab){
+  document.getElementById('dom-single').style.display=tab==='single'?'block':'none';
+  document.getElementById('dom-bulk').style.display=tab==='bulk'?'block':'none';
+  document.getElementById('tab-single').className=tab==='single'?'fbtn':'fbtn sec';
+  document.getElementById('tab-bulk').className=tab==='bulk'?'fbtn':'fbtn sec';
+}
+async function saveBulkDomains(){
+  var raw=document.getElementById('dm-bulk').value;
+  var day=parseInt(document.getElementById('dm-bulk-day').value)||1;
+  var pct=parseInt(document.getElementById('dm-bulk-pct').value)||0;
+  var lines=raw.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  if(!lines.length)return;
+  var doms=(data.domains&&data.domains.items)||[];
+  lines.forEach(function(domain){
+    doms.push({name:domain,day:day,pct:pct,sub:'DNS configured · Parking page live'});
+  });
+  var nd={items:doms,files:(data.domains&&data.domains.files)||[]};
+  await sb.from('client_data').upsert({client_id:viewId,section:'domains',data:nd},{onConflict:'client_id,section'});
+  data.domains=nd;
+  closeSetup();
+  nav('dom',document.getElementById('n-dom'));
 }
 async function saveDomain(){
   var doms=(data.domains&&data.domains.items)||[];
