@@ -453,17 +453,20 @@ function renderLogin(){
   return hdr+'<div class="card"><div class="ct">Tool access — all credentials</div>'+tools.map(function(t){return'<div class="tr"><div class="ti">'+(t.icon||'🔗')+'</div><div style="flex:1"><div class="tna">'+t.name+'</div><div class="tsu">'+(t.description||'')+'</div></div>'+(t.url?'<a class="tlk" href="'+t.url+'" target="_blank">Open ›</a>':'')+'</div>';}).join('')+'</div>';
 }
 
+function calcWarmup(startDate){
+  if(!startDate)return{day:1,pct:0,done:false};
+  var start=new Date(startDate);start.setHours(0,0,0,0);
+  var today=new Date();today.setHours(0,0,0,0);
+  var days=Math.round((today-start)/(1000*60*60*24));
+  var day=Math.min(14,Math.max(1,days+1));
+  var pct=Math.min(100,Math.round((days/14)*100));
+  return{day:day,pct:pct,done:pct>=100};
+}
 function renderDom(){
   var doms=(data.domains&&data.domains.items)||[];
   var files=(data.domains&&data.domains.files)||[];
-  var editBtn=isAdminView?'<button onclick="openEdit(\'dom\')" class="ebtn" style="font-size:11px;padding:5px 12px">Edit</button>':'';
-  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:14px;font-weight:600">Domains & Data</span>'+editBtn+'</div>';
-  var h=hdr+'<div class="card"><div class="ct">Sending domains — warmup status</div>';
-  if(doms.length)doms.forEach(function(d){h+='<div class="dr"><div><div class="dn">'+d.name+'</div><div class="ds">'+(d.sub||'DNS configured')+'</div></div><div style="text-align:right"><div class="wp">Day '+(d.day||1)+' · '+(d.pct||0)+'% warm</div><div class="wb"><div class="wf" style="width:'+(d.pct||0)+'%"></div></div></div></div>';});
-  else h+='<div class="empty">Domains are being purchased and configured.</div>';
-  h+='</div>';
-  if(files.length)h+='<div class="card"><div class="ct">Prospect data & assets</div>'+files.map(function(f){return'<div class="tr"><div class="ti">📊</div><div style="flex:1"><div class="tna">'+f.name+'</div><div class="tsu">'+(f.description||'')+'</div></div>'+(f.url?'<a class="tlk" href="'+f.url+'" target="_blank">Download ›</a>':'')+'</div>';}).join('')+'</div>';
-  return h;
+  var editBtn=isAdminView?'<button onclick="openEdit(\'dom\')" class="ebtn" style="font-size:11px;padding:5px 12px">Edit</button>':'';  var hdr='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:14px;font-weight:600">Domains & Data</span>'+editBtn+'</div>';  var h=hdr+'<div class="card"><div class="ct">Sending domains — warmup status</div>';  if(doms.length){doms.forEach(function(d){    var w=calcWarmup(d.start_date);    var color=w.done?'var(--green)':(w.pct>50?'var(--info)':('var(--warn)'));    var label=w.done?'Fully warmed':'Day '+w.day+' of 14 · '+w.pct+'% warm';    h+='<div class="dr"><div><div class="dn">'+d.name+'</div><div class="ds">'+new Date(d.start_date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})+' → '+new Date(new Date(d.start_date+'T00:00:00').getTime()+13*24*60*60*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</div></div><div style="text-align:right"><div class="wp" style="color:'+color+'">'+label+'</div><div class="wb"><div class="wf" style="width:'+w.pct+'%;background:'+color+'"></div></div></div></div>';  });}
+  else h+='<div class="empty">Domains are being purchased and configured.</div>';  h+='</div>';  if(files.length)h+='<div class="card"><div class="ct">Prospect data & assets</div>'+files.map(function(f){return'<div class="tr"><div class="ti">📊</div><div style="flex:1"><div class="tna">'+f.name+'</div><div class="tsu">'+f.description+'</div></div>'+(f.url?'<a class="tlk" href="'+f.url+'" target="_blank">Download ›</a>':'')+'</div>';}).join('')+'</div>';  return h;
 }
 
 function renderICP(){
@@ -943,31 +946,32 @@ async function saveLogins(){
 // ── DOMAINS ────────────────────────────────────────────────
 function editDomForm(){
   var doms=(data.domains&&data.domains.items)||[];
-  var h='<div class="oh">Domains & Data</div><div class="os">Add one domain or paste a bulk list — one domain per line.</div>';
+  var today=new Date().toISOString().split('T')[0];
+  var h='<div class="oh">Domains & Data</div><div class="os">Add domains with a start date — warmup progress calculates automatically over 14 days.</div>';
   h+='<div style="margin-bottom:10px;display:flex;gap:8px;border-bottom:1px solid var(--border);padding-bottom:12px">';
   h+='<button id="tab-single" onclick="domTab(\'single\')" class="fbtn" style="font-size:12px;padding:6px 14px">Single</button>';
   h+='<button id="tab-bulk" onclick="domTab(\'bulk\')" class="fbtn sec" style="font-size:12px;padding:6px 14px">Bulk import</button></div>';
   h+='<div id="dom-single">';
   h+='<div class="fg"><div><label class="fl">Domain name</label><input class="fn" id="dm-name" placeholder="getacmesales.com"></div>';
-  h+='<div><label class="fl">Warmup day</label><input class="fn" id="dm-day" type="number" placeholder="1" min="1" max="14"></div></div>';
-  h+='<div class="fg" style="margin-bottom:16px"><div><label class="fl">Warmup % (0-100)</label><input class="fn" id="dm-pct" type="number" placeholder="21" min="0" max="100"></div>';
-  h+='<div><label class="fl">Status note</label><input class="fn" id="dm-sub" placeholder="DNS configured · Parking page live"></div></div>';
-  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveDomain()">Add Domain</button></div>';
+  h+='<div><label class="fl">Warmup start date</label><input class="fn" id="dm-start" type="date" value="'+today+'"></div></div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:16px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveDomain()">Add Domain</button></div>';
   h+='</div>';
   h+='<div id="dom-bulk" style="display:none">';
   h+='<div class="fg full"><div><label class="fl">Paste domains — one per line</label>';
-  h+='<textarea class="fn" id="dm-bulk" rows="8" placeholder="getacmesales.com&#10;acmesalesteam.com&#10;tryacme.io&#10;heyacme.com&#10;acme-hq.com"></textarea></div></div>';
-  h+='<div class="fg" style="margin-bottom:16px"><div><label class="fl">Warmup day (applies to all)</label><input class="fn" id="dm-bulk-day" type="number" placeholder="1" min="1" max="14"></div>';
-  h+='<div><label class="fl">Warmup % (applies to all)</label><input class="fn" id="dm-bulk-pct" type="number" placeholder="0" min="0" max="100"></div></div>';
-  h+='<div style="display:flex;gap:8px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveBulkDomains()">Import All</button></div>';
+  h+='<textarea class="fn" id="dm-bulk" rows="8" placeholder="getacmesales.com&#10;acmesalesteam.com&#10;tryacme.io&#10;heyacme.com"></textarea></div></div>';
+  h+='<div class="fg full" style="margin-bottom:16px"><div><label class="fl">Warmup start date (applies to all)</label><input class="fn" id="dm-bulk-start" type="date" value="'+today+'"></div></div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:16px"><button class="fbtn sec" onclick="closeSetup()">Cancel</button><button class="fbtn" onclick="saveBulkDomains()">Import All</button></div>';
   h+='</div>';
   if(doms.length){
-    h+='<div style="border-top:1px solid var(--border);padding-top:16px;margin-top:20px">';
-    h+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Existing Domains</div>';
+    h+='<div style="border-top:1px solid var(--border);padding-top:14px"><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Existing Domains</div>';
     doms.forEach(function(d,i){
+      var w=calcWarmup(d.start_date);
       h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg)">';
-      h+='<div><div style="font-size:13px;font-weight:500">'+d.name+'</div><div style="font-size:11px;color:var(--muted)">Day '+d.day+' · '+d.pct+'%</div></div>';
-      h+='<button onclick="deleteDomain('+i+')" class="del-btn">Delete</button></div>';
+      h+='<div><div style="font-size:13px;font-weight:500">'+d.name+'</div>';
+      h+='<div style="font-size:11px;color:var(--muted)">Day '+w.day+' · '+w.pct+'%</div></div>';
+      h+='<div style="display:flex;gap:8px;align-items:center">';
+      h+='<input type="date" value="'+(d.start_date||'')+'" onchange="updateDomainDate('+i+',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;outline:none">';
+      h+='<button onclick="deleteDomain('+i+')" class="del-btn">Delete</button></div></div>';
     });
     h+='</div>';
   }
@@ -979,30 +983,32 @@ function domTab(tab){
   document.getElementById('tab-single').className=tab==='single'?'fbtn':'fbtn sec';
   document.getElementById('tab-bulk').className=tab==='bulk'?'fbtn':'fbtn sec';
 }
+async function saveDomain(){
+  var doms=(data.domains&&data.domains.items)||[];
+  var name=document.getElementById('dm-name').value.trim();
+  if(!name)return;
+  doms.push({name:name,start_date:document.getElementById('dm-start').value});
+  var nd={items:doms,files:(data.domains&&data.domains.files)||[]};
+  await sb.from('client_data').upsert({client_id:viewId,section:'domains',data:nd},{onConflict:'client_id,section'});
+  data.domains=nd;
+  openEdit('dom');
+}
 async function saveBulkDomains(){
   var raw=document.getElementById('dm-bulk').value;
-  var day=parseInt(document.getElementById('dm-bulk-day').value)||1;
-  var pct=parseInt(document.getElementById('dm-bulk-pct').value)||0;
+  var start=document.getElementById('dm-bulk-start').value;
   var lines=raw.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
   if(!lines.length)return;
   var doms=(data.domains&&data.domains.items)||[];
-  lines.forEach(function(domain){
-    doms.push({name:domain,day:day,pct:pct,sub:'DNS configured · Parking page live'});
-  });
+  lines.forEach(function(domain){doms.push({name:domain,start_date:start});});
   var nd={items:doms,files:(data.domains&&data.domains.files)||[]};
   await sb.from('client_data').upsert({client_id:viewId,section:'domains',data:nd},{onConflict:'client_id,section'});
   data.domains=nd;
   closeSetup();
   nav('dom',document.getElementById('n-dom'));
 }
-async function saveDomain(){
+async function updateDomainDate(idx,val){
   var doms=(data.domains&&data.domains.items)||[];
-  doms.push({
-    name:document.getElementById('dm-name').value||'domain.com',
-    day:parseInt(document.getElementById('dm-day').value)||1,
-    pct:parseInt(document.getElementById('dm-pct').value)||0,
-    sub:document.getElementById('dm-sub').value||'DNS configured'
-  });
+  if(doms[idx])doms[idx].start_date=val;
   var nd={items:doms,files:(data.domains&&data.domains.files)||[]};
   await sb.from('client_data').upsert({client_id:viewId,section:'domains',data:nd},{onConflict:'client_id,section'});
   data.domains=nd;
@@ -1016,6 +1022,7 @@ async function deleteDomain(idx){
   data.domains=nd;
   openEdit('dom');
 }
+
 
 // ── ICP ─────────────────────────────────────────────────────
 function editICPForm(){
