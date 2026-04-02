@@ -314,7 +314,8 @@ function renderDB(){
   cards.forEach(function(k){h+='<div class="kpi'+(k.good?' good':'')+'"><div class="kl">'+k.lbl+'</div><div class="kv">'+k.val+'</div><div class="ks">'+k.sub+'</div></div>';});
   h+='</div>';
   if(alrt)h+='<div class="alert a'+(alrt.type||'i')+'"><div class="atx">'+(alrt.title||'')+'</div>'+(alrt.body||'')+'</div>';
-  h+='<div class="card"><div class="ct">Onboarding timeline</div>';
+  var tlBtn=isAdminView?'<button onclick="openEdit(\'timeline\')" class="ebtn" style="font-size:11px;padding:5px 12px;margin-left:8px">Edit Timeline</button>':'';
+  h+='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span class="ct" style="margin-bottom:0">Onboarding timeline</span>'+tlBtn+'</div>';
   if(tl.length){tl.forEach(function(t){h+='<div class="tlr"><div class="tld '+(t.status==='done'?'tdn':t.status==='current'?'tcu':'tup')+'"></div><div class="tll">'+t.label+'</div><div class="tla">'+(t.date||'')+'</div><span class="tlb '+(t.status==='done'?'bdn':t.status==='current'?'bcu':'bup')+'">'+(t.status==='done'?'Done':t.status==='current'?'In progress':t.date||'Upcoming')+'</span></div>';});}
   else h+='<div class="empty">Timeline will appear here.</div>';
   h+='</div>';
